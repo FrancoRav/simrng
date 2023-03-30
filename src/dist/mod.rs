@@ -11,3 +11,12 @@ pub fn normal_box_muller(rand: &mut impl Random, sd: f64, mean: f64) -> (f64, f6
     let n2 = z2*sd + mean;
     (n1, n2)
 }
+
+pub fn normal_convolution(rand: &mut impl Random, sd: f64, mean: f64) -> f64 {
+    let mut sum = 0.0;
+    for _ in 0..12 {
+        sum += rand.next();
+    }
+    sum -= 6.0;
+    mean + sd * sum
+}
