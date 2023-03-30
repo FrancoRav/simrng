@@ -1,6 +1,10 @@
-use std::f64::consts::PI;
+use std::f64::consts::{PI, E};
 
 use crate::rng::Random;
+
+pub fn uniform(rand: &mut impl Random, lower: f64, upper: f64) -> f64 {
+    lower+rand.next()*(upper-lower)
+}
 
 pub fn normal_box_muller(rand: &mut impl Random, sd: f64, mean: f64) -> (f64, f64) {
     let rnd1 = rand.next();
@@ -19,4 +23,21 @@ pub fn normal_convolution(rand: &mut impl Random, sd: f64, mean: f64) -> f64 {
     }
     sum -= 6.0;
     mean + sd * sum
+}
+
+pub fn exponential(rand: &mut impl Random, lambda: f64) -> f64 {
+    -1f64/lambda*f64::ln(1f64-rand.next())
+}
+
+pub fn poisson(rand: &mut impl Random, lambda: f64) -> u64 {
+    let mut p: f64 = 1f64;
+    let mut x: i64 = -1;
+    let a = E.powf(-lambda);
+    loop {
+        let u = rand.next();
+        p *= u;
+        x += 1;
+        if p < a {break;}
+    }
+    x as u64
 }
