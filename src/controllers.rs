@@ -1,6 +1,6 @@
 use axum::Json;
-use simrng::dist::{exponential, normal_box_muller, poisson, uniform};
-use simrng::{dist::normal_convolution, rng::LinearCongruentialGenerator};
+use simrng::dist::{normal_convolution, exponential, normal_box_muller, poisson, uniform};
+use simrng::rng::LinearCongruentialGenerator;
 
 pub async fn get_uniform(data: Json<(u64,f64,f64,u64)>) -> Json<Vec<f64>> {
     let seed = data.0.0;
