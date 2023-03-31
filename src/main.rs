@@ -12,7 +12,12 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let app = Router::new().route("/api/uniform", get(controllers::get_uniform));
+    let app = Router::new()
+        .route("/api/uniform", get(controllers::get_uniform))
+        .route("/api/normal-bm", get(controllers::get_normal_bm))
+        .route("/api/normal-conv", get(controllers::get_normal_conv))
+        .route("/api/exponential", get(controllers::get_exponential))
+        .route("/api/poisson", get(controllers::get_poisson));
 
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], 3000));
     tracing::debug!("Listening on {}", addr);

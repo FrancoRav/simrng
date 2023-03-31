@@ -6,7 +6,7 @@ pub fn uniform(rand: &mut impl Random, lower: f64, upper: f64) -> f64 {
     lower+rand.next()*(upper-lower)
 }
 
-pub fn normal_box_muller(rand: &mut impl Random, sd: f64, mean: f64) -> (f64, f64) {
+pub fn normal_box_muller(rand: &mut impl Random, mean: f64, sd: f64) -> (f64, f64) {
     let rnd1 = rand.next();
     let rnd2 = rand.next();
     let z1 = (-2f64*(1f64-rnd1).ln()).sqrt() * (2f64*PI*rnd2).cos();
@@ -16,7 +16,7 @@ pub fn normal_box_muller(rand: &mut impl Random, sd: f64, mean: f64) -> (f64, f6
     (n1, n2)
 }
 
-pub fn normal_convolution(rand: &mut impl Random, sd: f64, mean: f64) -> f64 {
+pub fn normal_convolution(rand: &mut impl Random, mean: f64, sd: f64) -> f64 {
     let mut sum = 0.0;
     for _ in 0..12 {
         sum += rand.next();
