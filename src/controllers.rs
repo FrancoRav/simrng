@@ -1,12 +1,21 @@
-use axum::Json;
+use axum::{Json, extract};
 use simrng::dist::{exponential, normal_box_muller, normal_convolution, poisson, uniform};
 use simrng::rng::LinearCongruentialGenerator;
+use serde::{Deserialize};
 
-pub async fn get_uniform(data: Json<(u64, f64, f64, u64)>) -> Json<Vec<f64>> {
-    let seed = data.0 .0;
-    let lower_limit = data.1;
-    let upper_limit = data.2;
-    let number = data.3;
+#[derive(Deserialize)]
+pub struct UniformData {
+    seed: u64,
+    number: u64,
+    lower: f64,
+    upper: f64,
+}
+
+pub async fn get_uniform(data: extract::Json<UniformData>) -> Json<Vec<f64>> {
+    let seed = data.seed;
+    let number = data.number;
+    let lower_limit = data.lower;
+    let upper_limit = data.upper;
     let mut rng = LinearCongruentialGenerator::new(seed);
     let mut res = Vec::new();
     for _ in 0..number {
@@ -15,12 +24,19 @@ pub async fn get_uniform(data: Json<(u64, f64, f64, u64)>) -> Json<Vec<f64>> {
     Json(res)
 }
 
-pub async fn get_normal_bm(data: Json<(u64, f64, f64, u64)>) -> Json<Vec<f64>> {
-    println!("{:?}", data);
-    let seed = data.0 .0;
-    let mean = data.1;
-    let sd = data.2;
-    let number = data.3;
+#[derive(Deserialize, Debug)]
+pub struct NormalData {
+    seed: u64,
+    number: u64,
+    mean: f64,
+    sd: f64,
+}
+
+pub async fn get_normal_bm(data: extract::Json<NormalData>) -> Json<Vec<f64>> {
+    let seed = data.seed;
+    let number = data.number;
+    let mean = data.mean;
+    let sd = data.sd;
     let mut rng = LinearCongruentialGenerator::new(seed);
     let mut res = Vec::new();
     for _ in 0..number / 2 {
@@ -31,11 +47,11 @@ pub async fn get_normal_bm(data: Json<(u64, f64, f64, u64)>) -> Json<Vec<f64>> {
     Json(res)
 }
 
-pub async fn get_normal_conv(data: Json<(u64, f64, f64, u64)>) -> Json<Vec<f64>> {
-    let seed = data.0 .0;
-    let mean = data.1;
-    let sd = data.2;
-    let number = data.3;
+pub async fn get_normal_conv(data: extract::Json<NormalData>) -> Json<Vec<f64>> {
+    let seed = data.seed;
+    let number = data.number;
+    let mean = data.mean;
+    let sd = data.sd;
     let mut rng = LinearCongruentialGenerator::new(seed);
     let mut res = Vec::new();
     for _ in 0..number {
@@ -44,10 +60,17 @@ pub async fn get_normal_conv(data: Json<(u64, f64, f64, u64)>) -> Json<Vec<f64>>
     Json(res)
 }
 
-pub async fn get_exponential(data: Json<(u64, f64, u64)>) -> Json<Vec<f64>> {
-    let seed = data.0 .0;
-    let lambda = data.1;
-    let number = data.2;
+#[derive(Deserialize)]
+pub struct ExponentialData {
+    seed: u64,
+    number: u64,
+    lambda: f64,
+}
+
+pub async fn get_exponential(data: extract::Json<ExponentialData>) -> Json<Vec<f64>> {
+    let seed = data.seed;
+    let number = data.number;
+    let lambda = data.lambda;
     let mut rng = LinearCongruentialGenerator::new(seed);
     let mut res = Vec::new();
     for _ in 0..number {
@@ -56,10 +79,10 @@ pub async fn get_exponential(data: Json<(u64, f64, u64)>) -> Json<Vec<f64>> {
     Json(res)
 }
 
-pub async fn get_poisson(data: Json<(u64, f64, u64)>) -> Json<Vec<u64>> {
-    let seed = data.0 .0;
-    let lambda = data.1;
-    let number = data.2;
+pub async fn get_poisson(data: extract::Json<ExponentialData>) -> Json<Vec<u64>> {
+    let seed = data.seed;
+    let number = data.number;
+    let lambda = data.lambda;
     let mut rng = LinearCongruentialGenerator::new(seed);
     let mut res = Vec::new();
     for _ in 0..number {
