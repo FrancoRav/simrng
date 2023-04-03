@@ -1,6 +1,6 @@
 use axum::{
-    http::{HeaderValue, Method},
-    routing::{get, post},
+    http::Method,
+    routing::post,
     Router,
 };
 use tower_http::cors::{Any, CorsLayer};
