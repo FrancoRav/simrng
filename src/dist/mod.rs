@@ -52,7 +52,7 @@ pub fn exponential(rand: &mut impl Random, lambda: f64) -> f64 {
     -1f64/lambda*f64::ln(1f64-rand.next())
 }
 
-pub fn poisson(rand: &mut impl Random, lambda: f64) -> u64 {
+pub fn poisson(rand: &mut impl Random, lambda: f64) -> f64 {
     let mut p: f64 = 1f64;
     let mut x: i64 = -1;
     let a = E.powf(-lambda);
@@ -62,5 +62,5 @@ pub fn poisson(rand: &mut impl Random, lambda: f64) -> u64 {
         x += 1;
         if p < a {break;}
     }
-    x as u64
+    x as f64
 }
