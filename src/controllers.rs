@@ -1,15 +1,6 @@
 use axum::{Json, extract};
-use simrng::dist::{exponential, normal_box_muller, normal_convolution, poisson, uniform};
+use simrng::dist::{exponential, normal_box_muller, normal_convolution, poisson, uniform, UniformData, NormalData, ExponentialData};
 use simrng::rng::LinearCongruentialGenerator;
-use serde::{Deserialize};
-
-#[derive(Deserialize)]
-pub struct UniformData {
-    seed: u64,
-    number: u64,
-    lower: f64,
-    upper: f64,
-}
 
 pub async fn get_uniform(data: extract::Json<UniformData>) -> Json<Vec<f64>> {
     let seed = data.seed;
@@ -22,14 +13,6 @@ pub async fn get_uniform(data: extract::Json<UniformData>) -> Json<Vec<f64>> {
         res.push(uniform(&mut rng, lower_limit, upper_limit));
     }
     Json(res)
-}
-
-#[derive(Deserialize, Debug)]
-pub struct NormalData {
-    seed: u64,
-    number: u64,
-    mean: f64,
-    sd: f64,
 }
 
 pub async fn get_normal_bm(data: extract::Json<NormalData>) -> Json<Vec<f64>> {
@@ -58,13 +41,6 @@ pub async fn get_normal_conv(data: extract::Json<NormalData>) -> Json<Vec<f64>> 
         res.push(normal_convolution(&mut rng, mean, sd));
     }
     Json(res)
-}
-
-#[derive(Deserialize)]
-pub struct ExponentialData {
-    seed: u64,
-    number: u64,
-    lambda: f64,
 }
 
 pub async fn get_exponential(data: extract::Json<ExponentialData>) -> Json<Vec<f64>> {

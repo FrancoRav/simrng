@@ -4,6 +4,7 @@ pub fn add(left: usize, right: usize) -> usize {
 
 pub mod rng;
 pub mod dist;
+pub mod stats;
 
 #[cfg(test)]
 mod tests {

@@ -1,6 +1,29 @@
 use std::f64::consts::{PI, E};
-
 use crate::rng::Random;
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+pub struct UniformData {
+    pub seed: u64,
+    pub number: u64,
+    pub lower: f64,
+    pub upper: f64,
+}
+
+#[derive(Deserialize)]
+pub struct NormalData {
+    pub seed: u64,
+    pub number: u64,
+    pub mean: f64,
+    pub sd: f64,
+}
+
+#[derive(Deserialize)]
+pub struct ExponentialData {
+    pub seed: u64,
+    pub number: u64,
+    pub lambda: f64,
+}
 
 pub fn uniform(rand: &mut impl Random, lower: f64, upper: f64) -> f64 {
     lower+rand.next()*(upper-lower)
