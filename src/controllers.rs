@@ -1,6 +1,7 @@
 use axum::{Json, extract};
 use simrng::dist::{exponential, normal_box_muller, normal_convolution, poisson, uniform, UniformData, NormalData, ExponentialData};
 use simrng::rng::LinearCongruentialGenerator;
+use simrng::stats::{HistogramData, HistogramInput, generate_histogram};
 
 pub async fn get_uniform(data: extract::Json<UniformData>) -> Json<Vec<f64>> {
     let seed = data.seed;
@@ -55,7 +56,7 @@ pub async fn get_exponential(data: extract::Json<ExponentialData>) -> Json<Vec<f
     Json(res)
 }
 
-pub async fn get_poisson(data: extract::Json<ExponentialData>) -> Json<Vec<u64>> {
+pub async fn get_poisson(data: extract::Json<ExponentialData>) -> Json<Vec<f64>> {
     let seed = data.seed;
     let number = data.number;
     let lambda = data.lambda;
@@ -65,4 +66,9 @@ pub async fn get_poisson(data: extract::Json<ExponentialData>) -> Json<Vec<u64>>
         res.push(poisson(&mut rng, lambda));
     }
     Json(res)
+}
+
+pub async fn get_histogram(data: extract::Json<HistogramInput>) -> Json<HistogramData> {
+    let data = data.0;
+    Json(generate_histogram(data))
 }
