@@ -31,6 +31,7 @@ async fn main() {
         .route("/api/normal-conv", post(controllers::get_normal_conv))
         .route("/api/exponential", post(controllers::get_exponential))
         .route("/api/poisson", post(controllers::get_poisson))
+        .route("/api/histogram", post(controllers::get_histogram))
         .layer(cors);
 
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], 3000));
