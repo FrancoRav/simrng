@@ -1,11 +1,24 @@
-use axum::Json;
+use serde::{Deserialize, Serialize};
 
-pub struct Response {
-    x: Vec<f64>,
-    y: Vec<u64>
+#[derive(Deserialize)]
+pub struct HistogramInput {
+    pub nums: Vec<f64>,
+    pub lower: f64,
+    pub upper: f64,
+    pub intervals: usize,
 }
 
-pub fn generate_histogram(nums: Vec<f64>, lower: f64, upper: f64, intervals: usize) -> Json<Response> {
+#[derive(Serialize)]
+pub struct HistogramData {
+    pub x: Vec<f64>,
+    pub y: Vec<u64>
+}
+
+pub fn generate_histogram(input: HistogramInput) -> HistogramData {
+    let nums = input.nums;
+    let upper = input.upper;
+    let lower = input.lower;
+    let intervals = input.intervals;
     let size = (upper-lower)/intervals as f64;
     let mut interval_list: Vec<f64> = Vec::with_capacity(intervals);
     let mut interval = lower + (size/2f64);
@@ -22,7 +35,6 @@ pub fn generate_histogram(nums: Vec<f64>, lower: f64, upper: f64, intervals: usi
         data_list[ind] += 1;
     }
 
-    Json(Response { x: interval_list, y: data_list })
+    HistogramData { x: interval_list, y: data_list }
 }
-
 
