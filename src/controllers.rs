@@ -5,41 +5,44 @@ use simrng::dist::{
     NormalData, UniformData,
 };
 use simrng::rng::LinearCongruentialGenerator;
-use simrng::stats::{generate_histogram, HistogramData, HistogramInput, Distribution};
+use simrng::stats::{generate_histogram, Distribution, HistogramData, HistogramInput, Uniform, Normal, Exponential, Poisson};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-pub struct Generated<D: Distribution> {
+pub struct Generated {
     pub data: Vec<f64>,
-    pub dist: D,
+    pub dist: Mutex<Box<dyn Distribution>>,
 }
 
-impl<D: Distribution> Generated<D> {
-    fn new(data: Vec<f64>, dist: D) -> Self {
-        Generated { data, dist }
+unsafe impl Send for Generated {}
+
+impl Generated {
+    pub fn new(data: Vec<f64>, dist: Box<dyn Distribution>) -> Self {
+        let dist = Mutex::new(dist);
+        Self { data, dist }
     }
 }
 
-pub async fn get_uniform<D: Distribution>(
-    State(arc): State<Arc<Mutex<Generated<D>>>>,
+pub async fn get_uniform(
+    State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<UniformData>,
 ) -> Json<Vec<f64>> {
     let seed = data.seed;
     let number = data.number;
-    let lower_limit = data.lower;
-    let upper_limit = data.upper;
+    let lower = data.lower;
+    let upper = data.upper;
     let mut rng = LinearCongruentialGenerator::with_seed(seed);
     let mut res = Vec::new();
     for _ in 0..number {
-        res.push(uniform(&mut rng, lower_limit, upper_limit));
+        res.push(uniform(&mut rng, lower, upper));
     }
     let mut arc = arc.lock().await;
-    arc.data = res.clone();
+    *arc = Generated::new( res.clone(), Box::new(Uniform { lower, upper }));
     Json(res)
 }
 
-pub async fn get_normal_bm<D: Distribution>(
-    State(arc): State<Arc<Mutex<Generated<D>>>>,
+pub async fn get_normal_bm(
+    State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<NormalData>,
 ) -> Json<Vec<f64>> {
     let seed = data.seed;
@@ -54,12 +57,12 @@ pub async fn get_normal_bm<D: Distribution>(
         res.push(rnds.1);
     }
     let mut arc = arc.lock().await;
-    arc.data = res.clone();
+    *arc = Generated::new( res.clone(), Box::new(Normal { mean, sd }));
     Json(res)
 }
 
-pub async fn get_normal_conv<D: Distribution>(
-    State(arc): State<Arc<Mutex<Generated<D>>>>,
+pub async fn get_normal_conv(
+    State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<NormalData>,
 ) -> Json<Vec<f64>> {
     let seed = data.seed;
@@ -72,12 +75,12 @@ pub async fn get_normal_conv<D: Distribution>(
         res.push(normal_convolution(&mut rng, mean, sd));
     }
     let mut arc = arc.lock().await;
-    arc.data = res.clone();
+    *arc = Generated::new( res.clone(), Box::new(Normal { mean, sd }));
     Json(res)
 }
 
-pub async fn get_exponential<D: Distribution>(
-    State(arc): State<Arc<Mutex<Generated<D>>>>,
+pub async fn get_exponential(
+    State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<ExponentialData>,
 ) -> Json<Vec<f64>> {
     let seed = data.seed;
@@ -89,12 +92,12 @@ pub async fn get_exponential<D: Distribution>(
         res.push(exponential(&mut rng, lambda));
     }
     let mut arc = arc.lock().await;
-    arc.data = res.clone();
+    *arc = Generated::new( res.clone(), Box::new(Exponential { lambda }));
     Json(res)
 }
 
-pub async fn get_poisson<D: Distribution>(
-    State(arc): State<Arc<Mutex<Generated<D>>>>,
+pub async fn get_poisson(
+    State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<ExponentialData>,
 ) -> Json<Vec<f64>> {
     let seed = data.seed;
@@ -106,12 +109,13 @@ pub async fn get_poisson<D: Distribution>(
         res.push(poisson(&mut rng, lambda));
     }
     let mut arc = arc.lock().await;
+    *arc = Generated::new( res.clone(), Box::new(Poisson { lambda }));
     arc.data = res.clone();
     Json(res)
 }
 
-pub async fn get_histogram<D: Distribution>(
-    State(arc): State<Arc<Mutex<Generated<D>>>>,
+pub async fn get_histogram(
+    State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<HistogramInput>,
 ) -> Json<HistogramData> {
     let data = data.0;
