@@ -10,12 +10,18 @@ pub struct LinearCongruentialGenerator {
 }
 
 impl LinearCongruentialGenerator {
-    pub fn new(x0: u64) -> Self {
+    pub fn with_seed(x0: u64) -> Self {
         Self {
             x0,
             m: 4294967296,
             a: 1 + (4 * 712300),
             c: 1013904223,
+        }
+    }
+
+    pub fn new(x0: u64, m: u64, a: u64, c: u64) -> Self {
+        Self {
+            x0, m, a, c
         }
     }
 }
