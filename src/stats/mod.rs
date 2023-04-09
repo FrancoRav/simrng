@@ -1,7 +1,5 @@
 use std::f64::consts::PI;
-
 use serde::{Deserialize, Serialize};
-use tokio::sync::MutexGuard;
 
 #[derive(Deserialize)]
 pub struct HistogramInput {
@@ -39,11 +37,11 @@ impl Distribution for Normal {
         let mut interval = lower + (size / 2f64);
 
         for _ in 0..intervals {
-            interval += size;
             let pt1 = 1f64/(sd*f64::sqrt(2f64*PI));
             let pt2 = (-0.5*((interval-mean)/sd).powi(2)).exp();
             let prob = pt1*pt2*size;
             interval_list.push(prob);
+            interval += size;
         }
         interval_list
     }
@@ -71,9 +69,9 @@ impl Distribution for Exponential {
         let mut interval_list: Vec<f64> = Vec::with_capacity(intervals);
         let mut interval = lower + (size / 2f64);
         for _ in 0..intervals {
-            interval += size;
             let prob = (-lambda*interval).exp()*lambda;
             interval_list.push(prob);
+            interval += size;
         }
         interval_list
     }
@@ -90,9 +88,9 @@ impl Distribution for Poisson {
         let mut interval_list: Vec<f64> = Vec::with_capacity(intervals);
         let mut interval = lower;
         for _ in 0..intervals {
-            interval += size;
             let prob = ((-lambda).exp()*lambda.powf(interval))/factorial(interval);
             interval_list.push(prob);
+            interval += size;
         }
         interval_list
     }
