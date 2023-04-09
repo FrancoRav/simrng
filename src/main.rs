@@ -1,8 +1,11 @@
+use std::sync::Arc;
+
 use axum::{
     http::Method,
     routing::post,
     Router,
 };
+use tokio::sync::Mutex;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -10,6 +13,8 @@ mod controllers;
 
 #[tokio::main]
 async fn main() {
+    let last: Arc<Mutex<Vec<f64>>> = Arc::new(Mutex::new(vec![]));
+
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
             std::env::var("RUST_LOG").unwrap_or_else(|_| "api=debug".into()),
@@ -32,7 +37,8 @@ async fn main() {
         .route("/api/exponential", post(controllers::get_exponential))
         .route("/api/poisson", post(controllers::get_poisson))
         .route("/api/histogram", post(controllers::get_histogram))
-        .layer(cors);
+        .layer(cors)
+        .with_state(last);
 
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], 3000));
     tracing::debug!("Listening on {}", addr);
