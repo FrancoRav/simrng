@@ -5,12 +5,23 @@ use simrng::dist::{
     NormalData, UniformData,
 };
 use simrng::rng::LinearCongruentialGenerator;
-use simrng::stats::{generate_histogram, HistogramData, HistogramInput};
+use simrng::stats::{generate_histogram, HistogramData, HistogramInput, Distribution};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-pub async fn get_uniform(
-    State(arc): State<Arc<Mutex<Vec<f64>>>>,
+pub struct Generated<D: Distribution> {
+    pub data: Vec<f64>,
+    pub dist: D,
+}
+
+impl<D: Distribution> Generated<D> {
+    fn new(data: Vec<f64>, dist: D) -> Self {
+        Generated { data, dist }
+    }
+}
+
+pub async fn get_uniform<D: Distribution>(
+    State(arc): State<Arc<Mutex<Generated<D>>>>,
     data: extract::Json<UniformData>,
 ) -> Json<Vec<f64>> {
     let seed = data.seed;
@@ -23,12 +34,12 @@ pub async fn get_uniform(
         res.push(uniform(&mut rng, lower_limit, upper_limit));
     }
     let mut arc = arc.lock().await;
-    *arc = res.clone();
+    arc.data = res.clone();
     Json(res)
 }
 
-pub async fn get_normal_bm(
-    State(arc): State<Arc<Mutex<Vec<f64>>>>,
+pub async fn get_normal_bm<D: Distribution>(
+    State(arc): State<Arc<Mutex<Generated<D>>>>,
     data: extract::Json<NormalData>,
 ) -> Json<Vec<f64>> {
     let seed = data.seed;
@@ -43,12 +54,12 @@ pub async fn get_normal_bm(
         res.push(rnds.1);
     }
     let mut arc = arc.lock().await;
-    *arc = res.clone();
+    arc.data = res.clone();
     Json(res)
 }
 
-pub async fn get_normal_conv(
-    State(arc): State<Arc<Mutex<Vec<f64>>>>,
+pub async fn get_normal_conv<D: Distribution>(
+    State(arc): State<Arc<Mutex<Generated<D>>>>,
     data: extract::Json<NormalData>,
 ) -> Json<Vec<f64>> {
     let seed = data.seed;
@@ -61,12 +72,12 @@ pub async fn get_normal_conv(
         res.push(normal_convolution(&mut rng, mean, sd));
     }
     let mut arc = arc.lock().await;
-    *arc = res.clone();
+    arc.data = res.clone();
     Json(res)
 }
 
-pub async fn get_exponential(
-    State(arc): State<Arc<Mutex<Vec<f64>>>>,
+pub async fn get_exponential<D: Distribution>(
+    State(arc): State<Arc<Mutex<Generated<D>>>>,
     data: extract::Json<ExponentialData>,
 ) -> Json<Vec<f64>> {
     let seed = data.seed;
@@ -78,12 +89,12 @@ pub async fn get_exponential(
         res.push(exponential(&mut rng, lambda));
     }
     let mut arc = arc.lock().await;
-    *arc = res.clone();
+    arc.data = res.clone();
     Json(res)
 }
 
-pub async fn get_poisson(
-    State(arc): State<Arc<Mutex<Vec<f64>>>>,
+pub async fn get_poisson<D: Distribution>(
+    State(arc): State<Arc<Mutex<Generated<D>>>>,
     data: extract::Json<ExponentialData>,
 ) -> Json<Vec<f64>> {
     let seed = data.seed;
@@ -95,15 +106,15 @@ pub async fn get_poisson(
         res.push(poisson(&mut rng, lambda));
     }
     let mut arc = arc.lock().await;
-    *arc = res.clone();
+    arc.data = res.clone();
     Json(res)
 }
 
-pub async fn get_histogram(
-    State(arc): State<Arc<Mutex<Vec<f64>>>>,
+pub async fn get_histogram<D: Distribution>(
+    State(arc): State<Arc<Mutex<Generated<D>>>>,
     data: extract::Json<HistogramInput>,
 ) -> Json<HistogramData> {
     let data = data.0;
     let arc = arc.lock().await;
-    Json(generate_histogram(data, arc))
+    Json(generate_histogram(data, &arc.data))
 }

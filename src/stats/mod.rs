@@ -26,8 +26,8 @@ pub trait Distribution {
 }
 
 pub struct Normal {
-    mean: f64,
-    sd: f64,
+    pub mean: f64,
+    pub sd: f64,
 }
 
 impl Distribution for Normal {
@@ -50,8 +50,8 @@ impl Distribution for Normal {
 }
 
 pub struct Uniform {
-    lower: f64,
-    upper: f64,
+    pub lower: f64,
+    pub upper: f64,
 }
 
 impl Distribution for Uniform {
@@ -61,7 +61,7 @@ impl Distribution for Uniform {
 }
 
 pub struct Exponential {
-    lambda: f64,
+    pub lambda: f64,
 }
 
 impl Distribution for Exponential {
@@ -80,7 +80,7 @@ impl Distribution for Exponential {
 }
 
 pub struct Poisson {
-    lambda: f64,
+    pub lambda: f64,
 }
 
 impl Distribution for Poisson {
@@ -103,7 +103,7 @@ fn factorial(n: f64) -> f64 {
     prod as f64
 }
 
-pub fn generate_histogram(input: HistogramInput, nums: MutexGuard<Vec<f64>>) -> HistogramData {
+pub fn generate_histogram(input: HistogramInput, nums: &Vec<f64>) -> HistogramData {
     let upper = input.upper;
     let lower = input.lower;
     let intervals = input.intervals;

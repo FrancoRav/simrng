@@ -5,6 +5,8 @@ use axum::{
     routing::post,
     Router,
 };
+use crate::controllers::Generated;
+use simrng::stats::Uniform;
 use tokio::sync::Mutex;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -13,7 +15,7 @@ mod controllers;
 
 #[tokio::main]
 async fn main() {
-    let last: Arc<Mutex<Vec<f64>>> = Arc::new(Mutex::new(vec![]));
+    let last = Arc::new(Mutex::new(Generated { data: vec![], dist: Uniform {lower: 10f64, upper: 11f64}}));
 
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
