@@ -8,7 +8,7 @@ pub mod stats;
 
 #[cfg(test)]
 mod tests {
-    use crate::stats::Distribution;
+    use stats::Distribution;
 
     use super::*;
 
