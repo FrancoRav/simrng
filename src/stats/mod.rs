@@ -21,6 +21,7 @@ pub struct TestResult {
 
 pub trait Distribution {
     fn get_expected(&self, intervals: usize, lower: f64, upper: f64) -> Vec<f64>;
+    fn get_degrees(&self, intervals: usize) -> u64;
 }
 
 pub struct Normal {
@@ -45,6 +46,9 @@ impl Distribution for Normal {
         }
         interval_list
     }
+    fn get_degrees(&self, intervals: usize) -> u64 {
+        intervals as u64 - 3
+    }
 }
 
 pub struct Uniform {
@@ -55,6 +59,10 @@ pub struct Uniform {
 impl Distribution for Uniform {
     fn get_expected(&self, intervals: usize, _: f64, _: f64) -> Vec<f64> {
         vec![1f64/intervals as f64; intervals]
+    }
+
+    fn get_degrees(&self, intervals: usize) -> u64 {
+        intervals as u64 - 1
     }
 }
 
@@ -75,6 +83,10 @@ impl Distribution for Exponential {
         }
         interval_list
     }
+
+    fn get_degrees(&self, intervals: usize) -> u64 {
+        intervals as u64 - 2
+    }
 }
 
 pub struct Poisson {
@@ -93,6 +105,10 @@ impl Distribution for Poisson {
             interval += size;
         }
         interval_list
+    }
+
+    fn get_degrees(&self, intervals: usize) -> u64 {
+        intervals as u64 - 2
     }
 }
 
@@ -125,4 +141,33 @@ pub fn generate_histogram(input: HistogramInput, nums: &Vec<f64>) -> HistogramDa
         x: interval_list,
         y: data_list,
     }
+}
+
+pub fn chi_squared_test(input: HistogramInput, nums: &Vec<f64>, dist: Box<dyn Distribution>) -> TestResult {
+    let upper = input.upper;
+    let lower = input.lower;
+    let intervals = input.intervals;
+    let size = (upper - lower) / intervals as f64;
+
+    let mut data_list: Vec<u64> = vec![0; intervals];
+    for num in nums.iter() {
+        let ind = ((num - lower) / size) as usize;
+        let ind = ind.min(intervals - 1);
+        data_list[ind] += 1;
+    }
+
+    let exp_list: Vec<f64> = dist.get_expected(intervals, lower, upper);
+
+    let mut calculated = 0f64;
+    for (obs, exp) in data_list.iter().zip(exp_list) {
+        calculated += (*obs as f64-exp).powi(2)/exp;
+    }
+
+    let expected = get_expected_chi(dist.get_degrees(intervals), 950);
+
+    TestResult { calculated, expected }
+}
+
+fn get_expected_chi(degrees: u64, confidence: u64) -> f64 {
+    todo!();
 }
