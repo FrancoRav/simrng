@@ -4,8 +4,6 @@ use std::{f64::consts::PI, sync::Arc};
 
 #[derive(Deserialize)]
 pub struct HistogramInput {
-    pub lower: f64,
-    pub upper: f64,
     pub intervals: usize,
 }
 
@@ -13,6 +11,9 @@ pub struct HistogramInput {
 pub struct HistogramData {
     pub x: Vec<f64>,
     pub y: Vec<u64>,
+    pub lower: f64,
+    pub upper: f64,
+    pub size: f64,
 }
 
 #[derive(Serialize)]
@@ -120,8 +121,16 @@ fn factorial(n: f64) -> f64 {
 }
 
 pub fn generate_histogram(input: HistogramInput, nums: &Vec<f64>) -> HistogramData {
-    let upper = input.upper;
-    let lower = input.lower;
+    let lower = nums
+        .iter()
+        .min_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap()
+        .floor();
+    let upper = nums
+        .iter()
+        .max_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap()
+        .ceil();
     let intervals = input.intervals;
     let size = (upper - lower) / intervals as f64;
     let mut interval_list: Vec<f64> = Vec::with_capacity(intervals);
@@ -142,6 +151,9 @@ pub fn generate_histogram(input: HistogramInput, nums: &Vec<f64>) -> HistogramDa
     HistogramData {
         x: interval_list,
         y: data_list,
+        lower,
+        upper,
+        size,
     }
 }
 
@@ -150,8 +162,16 @@ pub fn chi_squared_test(
     nums: &Vec<f64>,
     dist: Arc<Box<dyn Distribution>>,
 ) -> TestResult {
-    let upper = input.upper;
-    let lower = input.lower;
+    let lower = nums
+        .iter()
+        .min_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap()
+        .floor();
+    let upper = nums
+        .iter()
+        .max_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap()
+        .ceil();
     let intervals = input.intervals;
     let size = (upper - lower) / intervals as f64;
 
@@ -167,7 +187,7 @@ pub fn chi_squared_test(
     let len = nums.len() as f64;
     let mut calculated = 0f64;
     for (obs, exp) in data_list.iter().zip(exp_list) {
-        calculated += (*obs as f64 - exp*len).powi(2) / (exp*len);
+        calculated += (*obs as f64 - exp * len).powi(2) / (exp * len);
     }
 
     let expected = chi_squared_critical_value(dist.get_degrees(intervals) as f64, 0.05);
