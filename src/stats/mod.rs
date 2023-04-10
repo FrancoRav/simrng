@@ -1,6 +1,6 @@
-use std::{f64::consts::PI, sync::Arc};
 use serde::{Deserialize, Serialize};
 use special_fun::cephes_double;
+use std::{f64::consts::PI, sync::Arc};
 
 #[derive(Deserialize)]
 pub struct HistogramInput {
@@ -40,9 +40,9 @@ impl Distribution for Normal {
         let mut interval = lower + (size / 2f64);
 
         for _ in 0..intervals {
-            let pt1 = 1f64/(sd*f64::sqrt(2f64*PI));
-            let pt2 = (-0.5*((interval-mean)/sd).powi(2)).exp();
-            let prob = pt1*pt2*size;
+            let pt1 = 1f64 / (sd * f64::sqrt(2f64 * PI));
+            let pt2 = (-0.5 * ((interval - mean) / sd).powi(2)).exp();
+            let prob = pt1 * pt2 * size;
             interval_list.push(prob);
             interval += size;
         }
@@ -60,7 +60,7 @@ pub struct Uniform {
 
 impl Distribution for Uniform {
     fn get_expected(&self, intervals: usize, _: f64, _: f64) -> Vec<f64> {
-        vec![1f64/intervals as f64; intervals]
+        vec![1f64 / intervals as f64; intervals]
     }
 
     fn get_degrees(&self, intervals: usize) -> u64 {
@@ -79,7 +79,7 @@ impl Distribution for Exponential {
         let mut interval_list: Vec<f64> = Vec::with_capacity(intervals);
         let mut interval = lower + (size / 2f64);
         for _ in 0..intervals {
-            let prob = (-lambda*interval).exp()*lambda;
+            let prob = (-lambda * interval).exp() * lambda;
             interval_list.push(prob);
             interval += size;
         }
@@ -102,7 +102,7 @@ impl Distribution for Poisson {
         let mut interval_list: Vec<f64> = Vec::with_capacity(intervals);
         let mut interval = lower;
         for _ in 0..intervals {
-            let prob = ((-lambda).exp()*lambda.powf(interval))/factorial(interval);
+            let prob = ((-lambda).exp() * lambda.powf(interval)) / factorial(interval);
             interval_list.push(prob);
             interval += size;
         }
@@ -145,7 +145,11 @@ pub fn generate_histogram(input: HistogramInput, nums: &Vec<f64>) -> HistogramDa
     }
 }
 
-pub fn chi_squared_test(input: HistogramInput, nums: &Vec<f64>, dist: Arc<Box<dyn Distribution>>) -> TestResult {
+pub fn chi_squared_test(
+    input: HistogramInput,
+    nums: &Vec<f64>,
+    dist: Arc<Box<dyn Distribution>>,
+) -> TestResult {
     let upper = input.upper;
     let lower = input.lower;
     let intervals = input.intervals;
@@ -162,12 +166,15 @@ pub fn chi_squared_test(input: HistogramInput, nums: &Vec<f64>, dist: Arc<Box<dy
 
     let mut calculated = 0f64;
     for (obs, exp) in data_list.iter().zip(exp_list) {
-        calculated += (*obs as f64-exp).powi(2)/exp;
+        calculated += (*obs as f64 - exp).powi(2) / exp;
     }
 
     let expected = chi_squared_critical_value(dist.get_degrees(intervals) as f64, 0.95);
 
-    let res = TestResult { calculated, expected };
+    let res = TestResult {
+        calculated,
+        expected,
+    };
     res
 }
 
@@ -203,4 +210,3 @@ pub fn chi_squared_critical_value(df: f64, alpha: f64) -> f64 {
     let x = 2.0 * gamma_inverse(z, a);
     x
 }
-

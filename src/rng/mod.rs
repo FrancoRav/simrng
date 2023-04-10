@@ -20,9 +20,7 @@ impl LinearCongruentialGenerator {
     }
 
     pub fn new(x0: u64, m: u64, a: u64, c: u64) -> Self {
-        Self {
-            x0, m, a, c
-        }
+        Self { x0, m, a, c }
     }
 }
 

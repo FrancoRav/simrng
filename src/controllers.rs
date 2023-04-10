@@ -5,7 +5,10 @@ use simrng::dist::{
     NormalData, UniformData,
 };
 use simrng::rng::LinearCongruentialGenerator;
-use simrng::stats::{generate_histogram, Distribution, HistogramData, HistogramInput, Uniform, Normal, Exponential, Poisson, TestResult, chi_squared_test};
+use simrng::stats::{
+    chi_squared_test, generate_histogram, Distribution, Exponential, HistogramData, HistogramInput,
+    Normal, Poisson, TestResult, Uniform,
+};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -37,7 +40,7 @@ pub async fn get_uniform(
         res.push(uniform(&mut rng, lower, upper));
     }
     let mut arc = arc.lock().await;
-    *arc = Generated::new( res.clone(), Box::new(Uniform { lower, upper }));
+    *arc = Generated::new(res.clone(), Box::new(Uniform { lower, upper }));
     Json(res)
 }
 
@@ -57,7 +60,7 @@ pub async fn get_normal_bm(
         res.push(rnds.1);
     }
     let mut arc = arc.lock().await;
-    *arc = Generated::new( res.clone(), Box::new(Normal { mean, sd }));
+    *arc = Generated::new(res.clone(), Box::new(Normal { mean, sd }));
     Json(res)
 }
 
@@ -75,7 +78,7 @@ pub async fn get_normal_conv(
         res.push(normal_convolution(&mut rng, mean, sd));
     }
     let mut arc = arc.lock().await;
-    *arc = Generated::new( res.clone(), Box::new(Normal { mean, sd }));
+    *arc = Generated::new(res.clone(), Box::new(Normal { mean, sd }));
     Json(res)
 }
 
@@ -92,7 +95,7 @@ pub async fn get_exponential(
         res.push(exponential(&mut rng, lambda));
     }
     let mut arc = arc.lock().await;
-    *arc = Generated::new( res.clone(), Box::new(Exponential { lambda }));
+    *arc = Generated::new(res.clone(), Box::new(Exponential { lambda }));
     Json(res)
 }
 
@@ -109,7 +112,7 @@ pub async fn get_poisson(
         res.push(poisson(&mut rng, lambda));
     }
     let mut arc = arc.lock().await;
-    *arc = Generated::new( res.clone(), Box::new(Poisson { lambda }));
+    *arc = Generated::new(res.clone(), Box::new(Poisson { lambda }));
     arc.data = res.clone();
     Json(res)
 }
