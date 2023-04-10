@@ -29,7 +29,7 @@ impl Generated {
 pub async fn get_uniform(
     State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<UniformData>,
-) -> Json<Vec<f64>> {
+) {
     let seed = data.seed;
     let number = data.number;
     let lower = data.lower;
@@ -41,13 +41,12 @@ pub async fn get_uniform(
     }
     let mut arc = arc.lock().await;
     *arc = Generated::new(res.clone(), Box::new(Uniform { lower, upper }));
-    Json(res)
 }
 
 pub async fn get_normal_bm(
     State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<NormalData>,
-) -> Json<Vec<f64>> {
+) {
     let seed = data.seed;
     let number = data.number;
     let mean = data.mean;
@@ -61,13 +60,12 @@ pub async fn get_normal_bm(
     }
     let mut arc = arc.lock().await;
     *arc = Generated::new(res.clone(), Box::new(Normal { mean, sd }));
-    Json(res)
 }
 
 pub async fn get_normal_conv(
     State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<NormalData>,
-) -> Json<Vec<f64>> {
+) {
     let seed = data.seed;
     let number = data.number;
     let mean = data.mean;
@@ -79,13 +77,12 @@ pub async fn get_normal_conv(
     }
     let mut arc = arc.lock().await;
     *arc = Generated::new(res.clone(), Box::new(Normal { mean, sd }));
-    Json(res)
 }
 
 pub async fn get_exponential(
     State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<ExponentialData>,
-) -> Json<Vec<f64>> {
+) {
     let seed = data.seed;
     let number = data.number;
     let lambda = data.lambda;
@@ -96,13 +93,12 @@ pub async fn get_exponential(
     }
     let mut arc = arc.lock().await;
     *arc = Generated::new(res.clone(), Box::new(Exponential { lambda }));
-    Json(res)
 }
 
 pub async fn get_poisson(
     State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<ExponentialData>,
-) -> Json<Vec<f64>> {
+) {
     let seed = data.seed;
     let number = data.number;
     let lambda = data.lambda;
@@ -114,7 +110,6 @@ pub async fn get_poisson(
     let mut arc = arc.lock().await;
     *arc = Generated::new(res.clone(), Box::new(Poisson { lambda }));
     arc.data = res.clone();
-    Json(res)
 }
 
 pub async fn get_histogram(
