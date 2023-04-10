@@ -39,6 +39,7 @@ async fn main() {
         .route("/api/exponential", post(controllers::get_exponential))
         .route("/api/poisson", post(controllers::get_poisson))
         .route("/api/histogram", post(controllers::get_histogram))
+        .route("/api/chisquared", post(controllers::get_chisquared))
         .layer(cors)
         .with_state(last);
 

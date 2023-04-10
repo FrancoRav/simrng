@@ -5,20 +5,20 @@ use simrng::dist::{
     NormalData, UniformData,
 };
 use simrng::rng::LinearCongruentialGenerator;
-use simrng::stats::{generate_histogram, Distribution, HistogramData, HistogramInput, Uniform, Normal, Exponential, Poisson};
+use simrng::stats::{generate_histogram, Distribution, HistogramData, HistogramInput, Uniform, Normal, Exponential, Poisson, TestResult, chi_squared_test};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub struct Generated {
     pub data: Vec<f64>,
-    pub dist: Mutex<Box<dyn Distribution>>,
+    pub dist: Arc<Box<dyn Distribution>>,
 }
 
 unsafe impl Send for Generated {}
 
 impl Generated {
     pub fn new(data: Vec<f64>, dist: Box<dyn Distribution>) -> Self {
-        let dist = Mutex::new(dist);
+        let dist = Arc::new(dist);
         Self { data, dist }
     }
 }
@@ -121,4 +121,15 @@ pub async fn get_histogram(
     let data = data.0;
     let arc = arc.lock().await;
     Json(generate_histogram(data, &arc.data))
+}
+
+pub async fn get_chisquared(
+    State(arc): State<Arc<Mutex<Generated>>>,
+    data: extract::Json<HistogramInput>,
+) -> Json<TestResult> {
+    let data = data.0;
+    let arc = arc.lock().await;
+    let dist = arc.dist.clone();
+    let res = chi_squared_test(data, &arc.data, dist);
+    Json(res)
 }
