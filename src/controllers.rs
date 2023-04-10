@@ -32,7 +32,7 @@ pub async fn get_uniform(
     let lower = data.lower;
     let upper = data.upper;
     let mut rng = LinearCongruentialGenerator::with_seed(seed);
-    let mut res = Vec::new();
+    let mut res = Vec::with_capacity(number as usize);
     for _ in 0..number {
         res.push(uniform(&mut rng, lower, upper));
     }
@@ -50,7 +50,7 @@ pub async fn get_normal_bm(
     let mean = data.mean;
     let sd = data.sd;
     let mut rng = LinearCongruentialGenerator::with_seed(seed);
-    let mut res = Vec::new();
+    let mut res = Vec::with_capacity(number as usize);
     for _ in 0..number / 2 {
         let rnds = normal_box_muller(&mut rng, mean, sd);
         res.push(rnds.0);
@@ -70,7 +70,7 @@ pub async fn get_normal_conv(
     let mean = data.mean;
     let sd = data.sd;
     let mut rng = LinearCongruentialGenerator::with_seed(seed);
-    let mut res = Vec::new();
+    let mut res = Vec::with_capacity(number as usize);
     for _ in 0..number {
         res.push(normal_convolution(&mut rng, mean, sd));
     }
@@ -87,7 +87,7 @@ pub async fn get_exponential(
     let number = data.number;
     let lambda = data.lambda;
     let mut rng = LinearCongruentialGenerator::with_seed(seed);
-    let mut res = Vec::new();
+    let mut res = Vec::with_capacity(number as usize);
     for _ in 0..number {
         res.push(exponential(&mut rng, lambda));
     }
@@ -104,7 +104,7 @@ pub async fn get_poisson(
     let number = data.number;
     let lambda = data.lambda;
     let mut rng = LinearCongruentialGenerator::with_seed(seed);
-    let mut res = Vec::new();
+    let mut res = Vec::with_capacity(number as usize);
     for _ in 0..number {
         res.push(poisson(&mut rng, lambda));
     }
