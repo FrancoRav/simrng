@@ -1,5 +1,6 @@
-use std::f64::consts::PI;
+use std::{f64::consts::PI, sync::Arc};
 use serde::{Deserialize, Serialize};
+use special_fun::cephes_double;
 
 #[derive(Deserialize)]
 pub struct HistogramInput {
@@ -14,6 +15,7 @@ pub struct HistogramData {
     pub y: Vec<u64>,
 }
 
+#[derive(Serialize)]
 pub struct TestResult {
     pub calculated: f64,
     pub expected: f64,
@@ -143,7 +145,7 @@ pub fn generate_histogram(input: HistogramInput, nums: &Vec<f64>) -> HistogramDa
     }
 }
 
-pub fn chi_squared_test(input: HistogramInput, nums: &Vec<f64>, dist: Box<dyn Distribution>) -> TestResult {
+pub fn chi_squared_test(input: HistogramInput, nums: &Vec<f64>, dist: Arc<Box<dyn Distribution>>) -> TestResult {
     let upper = input.upper;
     let lower = input.lower;
     let intervals = input.intervals;
@@ -163,11 +165,42 @@ pub fn chi_squared_test(input: HistogramInput, nums: &Vec<f64>, dist: Box<dyn Di
         calculated += (*obs as f64-exp).powi(2)/exp;
     }
 
-    let expected = get_expected_chi(dist.get_degrees(intervals), 950);
+    let expected = chi_squared_critical_value(dist.get_degrees(intervals) as f64, 0.95);
 
-    TestResult { calculated, expected }
+    let res = TestResult { calculated, expected };
+    res
 }
 
-fn get_expected_chi(degrees: u64, confidence: u64) -> f64 {
-    todo!();
+fn gamma_incomplete_upper(a: f64, x: f64) -> f64 {
+    let epsilon = 1e-8;
+    let mut s = 0.0;
+    let mut term: f64 = 1.0;
+    let mut k = 0;
+    while term.abs() > epsilon {
+        term = (x.powf(a + k as f64) * (-x).exp()) / cephes_double::gamma(a + k as f64 + 1.0);
+        s += term;
+        k += 1;
+    }
+    s
 }
+
+fn gamma_inverse(z: f64, a: f64) -> f64 {
+    let epsilon = 1e-8;
+    let mut x = a + 1.0;
+    let mut prev_x = 0.0;
+    while (x - prev_x).abs() > epsilon {
+        prev_x = x;
+        let f = gamma_incomplete_upper(a, x) - z;
+        let df = x.powf(a - 1.0) * (-x).exp();
+        x -= f / df;
+    }
+    x
+}
+
+pub fn chi_squared_critical_value(df: f64, alpha: f64) -> f64 {
+    let z = 1.0 - alpha;
+    let a = df / 2.0;
+    let x = 2.0 * gamma_inverse(z, a);
+    x
+}
+
