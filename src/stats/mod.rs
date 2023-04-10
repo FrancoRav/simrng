@@ -164,12 +164,13 @@ pub fn chi_squared_test(
 
     let exp_list: Vec<f64> = dist.get_expected(intervals, lower, upper);
 
+    let len = nums.len() as f64;
     let mut calculated = 0f64;
     for (obs, exp) in data_list.iter().zip(exp_list) {
-        calculated += (*obs as f64 - exp).powi(2) / exp;
+        calculated += (*obs as f64 - exp*len).powi(2) / (exp*len);
     }
 
-    let expected = chi_squared_critical_value(dist.get_degrees(intervals) as f64, 0.95);
+    let expected = chi_squared_critical_value(dist.get_degrees(intervals) as f64, 0.05);
 
     let res = TestResult {
         calculated,
