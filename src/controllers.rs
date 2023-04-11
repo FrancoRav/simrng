@@ -14,13 +14,11 @@ use tokio::sync::Mutex;
 
 pub struct Generated {
     pub data: Vec<f64>,
-    pub dist: Arc<Box<dyn Distribution>>,
+    pub dist: Arc<Box<dyn Distribution + Send + Sync>>,
 }
 
-unsafe impl Send for Generated {}
-
 impl Generated {
-    pub fn new(data: Vec<f64>, dist: Box<dyn Distribution>) -> Self {
+    pub fn new(data: Vec<f64>, dist: Box<dyn Distribution + Send + Sync>) -> Self {
         let dist = Arc::new(dist);
         Self { data, dist }
     }

@@ -160,7 +160,7 @@ pub fn generate_histogram(input: HistogramInput, nums: &Vec<f64>) -> HistogramDa
 pub fn chi_squared_test(
     input: HistogramInput,
     nums: &Vec<f64>,
-    dist: Arc<Box<dyn Distribution>>,
+    dist: Arc<Box<dyn Distribution + Send + Sync>>,
 ) -> TestResult {
     let lower = nums
         .iter()
