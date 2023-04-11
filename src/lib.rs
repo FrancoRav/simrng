@@ -9,13 +9,13 @@ pub mod stats;
 #[cfg(test)]
 mod tests {
     use stats::chi_squared_critical_value;
-    use stats::Distribution;
+    use dist::Distribution;
 
     use super::*;
 
     #[test]
     fn test_expected_uniform() {
-        let uniform = stats::Uniform {
+        let uniform = dist::Uniform {
             lower: 0f64,
             upper: 5f64,
         };
@@ -25,9 +25,11 @@ mod tests {
 
     #[test]
     fn test_expected_normal() {
-        let normal = stats::Normal {
+        let normal = dist::Normal {
             mean: 10f64,
             sd: 2f64,
+            algorithm: dist::Algorithm::BoxMuller,
+            pair: None,
         };
         let data: Vec<f64> = normal
             .get_expected(8, 6f64, 14f64)

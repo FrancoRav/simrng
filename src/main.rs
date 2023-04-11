@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::controllers::Generated;
 use axum::{http::Method, routing::post, Router};
-use simrng::stats::Uniform;
+use simrng::dist::Uniform;
 use tokio::sync::Mutex;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -35,11 +35,7 @@ async fn main() {
         .allow_methods([Method::GET, Method::POST]);
 
     let app = Router::new()
-        .route("/api/uniform", post(controllers::get_uniform))
-        .route("/api/normal-bm", post(controllers::get_normal_bm))
-        .route("/api/normal-conv", post(controllers::get_normal_conv))
-        .route("/api/exponential", post(controllers::get_exponential))
-        .route("/api/poisson", post(controllers::get_poisson))
+        .route("/api/generate", post(controllers::get_unified))
         .route("/api/histogram", post(controllers::get_histogram))
         .route("/api/chisquared", post(controllers::get_chisquared))
         .layer(cors)
