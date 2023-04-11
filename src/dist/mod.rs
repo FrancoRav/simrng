@@ -64,9 +64,7 @@ impl Normal {
         }
         ret
     }
-}
 
-impl Normal {
     pub fn get_bm(&self, rand: &mut dyn Random) -> (f64, f64) {
         let rnd1 = rand.next();
         let rnd2 = rand.next();
