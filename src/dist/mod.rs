@@ -47,19 +47,17 @@ impl Normal {
     pub fn next(&mut self, rand: &mut dyn Random) -> f64 {
         let ret: f64;
         match self.algorithm {
-            Algorithm::BoxMuller => {
-                match self.pair {
-                    Some(x) => {
-                        ret = x;
-                        self.pair = None;
-                    },
-                    None => {
-                        let gen = self.get_bm(rand);
-                        self.pair = Some(gen.1);
-                        ret = gen.0;
-                    }
+            Algorithm::BoxMuller => match self.pair {
+                Some(x) => {
+                    ret = x;
+                    self.pair = None;
                 }
-            }
+                None => {
+                    let gen = self.get_bm(rand);
+                    self.pair = Some(gen.1);
+                    ret = gen.0;
+                }
+            },
             Algorithm::Convolution => {
                 ret = self.get_conv(rand);
             }
@@ -102,11 +100,17 @@ impl Distribution for Uniform {
         let mut interval = lower;
         for _ in 0..intervals {
             let inside_interval = {
-                if interval >= self.lower && (interval + size <= self.upper) {size}
-                else if interval + size < self.lower {0f64}
-                else if interval >= self.upper {0f64}
-                else if interval < self.lower {size-(self.lower-interval)}
-                else {self.upper-interval}
+                if interval >= self.lower && (interval + size <= self.upper) {
+                    size
+                } else if interval + size < self.lower {
+                    0f64
+                } else if interval >= self.upper {
+                    0f64
+                } else if interval < self.lower {
+                    size - (self.lower - interval)
+                } else {
+                    self.upper - interval
+                }
             };
             interval_list.push(1f64 / (self.upper - self.lower) * inside_interval);
             interval += size;
@@ -200,4 +204,3 @@ fn factorial(n: f64) -> f64 {
     let prod: u64 = (0..n as u64).product();
     prod as f64
 }
-

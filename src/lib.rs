@@ -8,8 +8,8 @@ pub mod stats;
 
 #[cfg(test)]
 mod tests {
-    use stats::chi_squared_critical_value;
     use dist::Distribution;
+    use stats::chi_squared_critical_value;
 
     use super::*;
 
