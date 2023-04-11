@@ -30,6 +30,8 @@ pub async fn get_uniform(
     State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<UniformData>,
 ) {
+    let mut arc = arc.lock().await;
+    arc.data = vec![];
     let seed = data.seed;
     let number = data.number;
     let lower = data.lower;
@@ -39,7 +41,6 @@ pub async fn get_uniform(
     for _ in 0..number {
         res.push(uniform(&mut rng, lower, upper));
     }
-    let mut arc = arc.lock().await;
     *arc = Generated::new(res.clone(), Box::new(Uniform { lower, upper }));
 }
 
@@ -47,6 +48,8 @@ pub async fn get_normal_bm(
     State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<NormalData>,
 ) {
+    let mut arc = arc.lock().await;
+    arc.data = vec![];
     let seed = data.seed;
     let number = data.number;
     let mean = data.mean;
@@ -58,7 +61,6 @@ pub async fn get_normal_bm(
         res.push(rnds.0);
         res.push(rnds.1);
     }
-    let mut arc = arc.lock().await;
     *arc = Generated::new(res.clone(), Box::new(Normal { mean, sd }));
 }
 
@@ -66,6 +68,8 @@ pub async fn get_normal_conv(
     State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<NormalData>,
 ) {
+    let mut arc = arc.lock().await;
+    arc.data = vec![];
     let seed = data.seed;
     let number = data.number;
     let mean = data.mean;
@@ -75,7 +79,6 @@ pub async fn get_normal_conv(
     for _ in 0..number {
         res.push(normal_convolution(&mut rng, mean, sd));
     }
-    let mut arc = arc.lock().await;
     *arc = Generated::new(res.clone(), Box::new(Normal { mean, sd }));
 }
 
@@ -83,6 +86,8 @@ pub async fn get_exponential(
     State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<ExponentialData>,
 ) {
+    let mut arc = arc.lock().await;
+    arc.data = vec![];
     let seed = data.seed;
     let number = data.number;
     let lambda = data.lambda;
@@ -91,7 +96,6 @@ pub async fn get_exponential(
     for _ in 0..number {
         res.push(exponential(&mut rng, lambda));
     }
-    let mut arc = arc.lock().await;
     *arc = Generated::new(res.clone(), Box::new(Exponential { lambda }));
 }
 
@@ -99,6 +103,8 @@ pub async fn get_poisson(
     State(arc): State<Arc<Mutex<Generated>>>,
     data: extract::Json<ExponentialData>,
 ) {
+    let mut arc = arc.lock().await;
+    arc.data = vec![];
     let seed = data.seed;
     let number = data.number;
     let lambda = data.lambda;
@@ -107,7 +113,6 @@ pub async fn get_poisson(
     for _ in 0..number {
         res.push(poisson(&mut rng, lambda));
     }
-    let mut arc = arc.lock().await;
     *arc = Generated::new(res.clone(), Box::new(Poisson { lambda }));
     arc.data = res.clone();
 }
