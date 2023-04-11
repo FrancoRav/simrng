@@ -7,7 +7,7 @@ use simrng::stats::{
     chi_squared_test, generate_histogram, HistogramData, HistogramInput, TestResult,
 };
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 
 #[derive(Deserialize)]
 pub enum DistributionType {
@@ -38,10 +38,10 @@ impl Generated {
 }
 
 pub async fn get_unified(
-    State(arc): State<Arc<Mutex<Generated>>>,
+    State(arc): State<Arc<RwLock<Generated>>>,
     data: extract::Json<GenerationParameters>,
     ) {
-    let mut arc = arc.lock().await;
+    let mut arc = arc.write().await;
     arc.data = vec![];
     let mut rng = LinearCongruentialGenerator::with_seed(data.seed);
     let mut res = Vec::with_capacity(data.number as usize);
@@ -80,20 +80,20 @@ pub async fn get_unified(
 }
 
 pub async fn get_histogram(
-    State(arc): State<Arc<Mutex<Generated>>>,
+    State(arc): State<Arc<RwLock<Generated>>>,
     data: extract::Json<HistogramInput>,
 ) -> Json<HistogramData> {
     let data = data.0;
-    let arc = arc.lock().await;
+    let arc = arc.read().await;
     Json(generate_histogram(data, &arc.data))
 }
 
 pub async fn get_chisquared(
-    State(arc): State<Arc<Mutex<Generated>>>,
+    State(arc): State<Arc<RwLock<Generated>>>,
     data: extract::Json<HistogramInput>,
 ) -> Json<TestResult> {
     let data = data.0;
-    let arc = arc.lock().await;
+    let arc = arc.read().await;
     let dist = arc.dist.clone();
     let res = chi_squared_test(data, &arc.data, dist);
     Json(res)

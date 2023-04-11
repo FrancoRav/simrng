@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::controllers::Generated;
 use axum::{http::Method, routing::post, Router};
 use simrng::dist::Uniform;
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -11,7 +11,7 @@ mod controllers;
 
 #[tokio::main]
 async fn main() {
-    let last: Arc<Mutex<Generated>> = Arc::new(Mutex::new(Generated::new(
+    let last: Arc<RwLock<Generated>> = Arc::new(RwLock::new(Generated::new(
         vec![],
         Box::new(Uniform {
             lower: 10f64,
