@@ -60,8 +60,22 @@ pub struct Uniform {
 }
 
 impl Distribution for Uniform {
-    fn get_expected(&self, intervals: usize, _: f64, _: f64) -> Vec<f64> {
-        vec![1f64 / intervals as f64; intervals]
+    fn get_expected(&self, intervals: usize, lower: f64, upper: f64) -> Vec<f64> {
+        let size = (upper - lower) / intervals as f64;
+        let mut interval_list: Vec<f64> = Vec::with_capacity(intervals);
+        let mut interval = lower;
+        for _ in 0..intervals {
+            let inside_interval = {
+                if interval >= self.lower && (interval + size <= self.upper) {size}
+                else if interval + size < self.lower {0f64}
+                else if interval >= self.upper {0f64}
+                else if interval < self.lower {size-(self.lower-interval)}
+                else {self.upper-interval}
+            };
+            interval_list.push(1f64 / (self.upper - self.lower) * inside_interval);
+            interval += size;
+        }
+        interval_list
     }
 
     fn get_degrees(&self, intervals: usize) -> u64 {
@@ -187,6 +201,7 @@ pub fn chi_squared_test(
     let len = nums.len() as f64;
     let mut calculated = 0f64;
     for (obs, exp) in data_list.iter().zip(exp_list) {
+        if exp == 0f64 {continue}
         calculated += (*obs as f64 - exp * len).powi(2) / (exp * len);
     }
 
