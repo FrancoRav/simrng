@@ -38,6 +38,7 @@ async fn main() {
         .route("/api/generate", post(controllers::get_unified))
         .route("/api/histogram", post(controllers::get_histogram))
         .route("/api/chisquared", post(controllers::get_chisquared))
+        .route("/api/statistics", post(controllers::get_statistics))
         .layer(cors)
         .with_state(last);
 

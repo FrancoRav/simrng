@@ -1,10 +1,11 @@
 use axum::extract::State;
 use axum::{extract, Json};
 use serde::Deserialize;
-use simrng::dist::{Exponential, Normal, Poisson, Uniform, Distribution};
+use simrng::dist::{Distribution, Exponential, Normal, Poisson, Uniform};
 use simrng::rng::LinearCongruentialGenerator;
 use simrng::stats::{
-    chi_squared_test, generate_histogram, HistogramData, HistogramInput, TestResult,
+    chi_squared_test, full_statistics, generate_histogram, HistogramData, HistogramInput,
+    StatisticsResponse, TestResult,
 };
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -40,7 +41,7 @@ impl Generated {
 pub async fn get_unified(
     State(arc): State<Arc<RwLock<Generated>>>,
     data: extract::Json<GenerationParameters>,
-    ) {
+) {
     let mut arc = arc.write().await;
     arc.data = vec![];
     let mut rng = LinearCongruentialGenerator::with_seed(data.seed);
@@ -96,5 +97,16 @@ pub async fn get_chisquared(
     let arc = arc.read().await;
     let dist = arc.dist.clone();
     let res = chi_squared_test(data, &arc.data, dist);
+    Json(res)
+}
+
+pub async fn get_statistics(
+    State(arc): State<Arc<RwLock<Generated>>>,
+    data: extract::Json<HistogramInput>,
+) -> Json<StatisticsResponse> {
+    let data = data.0;
+    let arc = arc.read().await;
+    let dist = arc.dist.clone();
+    let res = full_statistics(data, &arc.data, dist);
     Json(res)
 }
