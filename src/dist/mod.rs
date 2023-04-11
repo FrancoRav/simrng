@@ -5,7 +5,6 @@ use std::f64::consts::{E, PI};
 pub trait Distribution {
     fn get_expected(&self, intervals: usize, lower: f64, upper: f64) -> Vec<f64>;
     fn get_degrees(&self, intervals: usize) -> u64;
-    fn next(&mut self, rand: &mut dyn Random) -> f64;
 }
 
 #[derive(Deserialize)]
@@ -42,8 +41,10 @@ impl Distribution for Normal {
     fn get_degrees(&self, intervals: usize) -> u64 {
         intervals as u64 - 3
     }
+}
 
-    fn next(&mut self, rand: &mut dyn Random) -> f64 {
+impl Normal {
+    pub fn next(&mut self, rand: &mut dyn Random) -> f64 {
         let ret: f64;
         match self.algorithm {
             Algorithm::BoxMuller => {
@@ -116,8 +117,10 @@ impl Distribution for Uniform {
     fn get_degrees(&self, intervals: usize) -> u64 {
         intervals as u64 - 1
     }
+}
 
-    fn next(&mut self, rand: &mut dyn Random) -> f64 {
+impl Uniform {
+    pub fn next(&self, rand: &mut dyn Random) -> f64 {
         self.lower + rand.next() * (self.upper - self.lower)
     }
 }
@@ -144,8 +147,10 @@ impl Distribution for Exponential {
     fn get_degrees(&self, intervals: usize) -> u64 {
         intervals as u64 - 2
     }
+}
 
-    fn next(&mut self, rand: &mut dyn Random) -> f64 {
+impl Exponential {
+    pub fn next(&self, rand: &mut dyn Random) -> f64 {
         -1f64 / self.lambda * f64::ln(1f64 - rand.next())
     }
 }
@@ -172,8 +177,10 @@ impl Distribution for Poisson {
     fn get_degrees(&self, intervals: usize) -> u64 {
         intervals as u64 - 2
     }
+}
 
-    fn next(&mut self, rand: &mut dyn Random) -> f64 {
+impl Poisson {
+    pub fn next(&self, rand: &mut dyn Random) -> f64 {
         let mut p: f64 = 1f64;
         let mut x: i64 = -1;
         let a = E.powf(-self.lambda);

@@ -43,27 +43,40 @@ pub async fn get_unified(
     ) {
     let mut arc = arc.lock().await;
     arc.data = vec![];
-    let mut distribution: Box<dyn Distribution + Send + Sync>;
-    match data.distribution {
-        DistributionType::Normal => {
-            distribution = Box::new(serde_json::from_value::<Normal>(data.data.clone()).unwrap());
-        }
-        DistributionType::Uniform => {
-            distribution = Box::new(serde_json::from_value::<Uniform>(data.data.clone()).unwrap());
-        }
-        DistributionType::Exponential => {
-            distribution = Box::new(serde_json::from_value::<Exponential>(data.data.clone()).unwrap());
-        }
-        DistributionType::Poisson => {
-            distribution = Box::new(serde_json::from_value::<Poisson>(data.data.clone()).unwrap());
-        }
-    }
     let mut rng = LinearCongruentialGenerator::with_seed(data.seed);
     let mut res = Vec::with_capacity(data.number as usize);
-    for _ in 0..data.number {
-        res.push(distribution.next(&mut rng));
+    let dist: Box<dyn Distribution + Send + Sync>;
+    match data.distribution {
+        DistributionType::Normal => {
+            let mut distribution = serde_json::from_value::<Normal>(data.data.clone()).unwrap();
+            for _ in 0..data.number {
+                res.push(distribution.next(&mut rng));
+            }
+            dist = Box::new(distribution);
+        }
+        DistributionType::Uniform => {
+            let distribution = serde_json::from_value::<Uniform>(data.data.clone()).unwrap();
+            for _ in 0..data.number {
+                res.push(distribution.next(&mut rng));
+            }
+            dist = Box::new(distribution);
+        }
+        DistributionType::Exponential => {
+            let distribution = serde_json::from_value::<Exponential>(data.data.clone()).unwrap();
+            for _ in 0..data.number {
+                res.push(distribution.next(&mut rng));
+            }
+            dist = Box::new(distribution);
+        }
+        DistributionType::Poisson => {
+            let distribution = serde_json::from_value::<Poisson>(data.data.clone()).unwrap();
+            for _ in 0..data.number {
+                res.push(distribution.next(&mut rng));
+            }
+            dist = Box::new(distribution);
+        }
     }
-    *arc = Generated::new(res, distribution)
+    *arc = Generated::new(res, dist);
 }
 
 pub async fn get_histogram(
