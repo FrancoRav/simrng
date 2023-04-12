@@ -100,14 +100,22 @@ pub async fn full_statistics(
         interval += size;
     }
 
-    let mut data_list: Vec<u64> = vec![0; intervals];
+    // Cantidad de hilos del CPU
     let threads: usize = std::thread::available_parallelism().unwrap().into();
+    // Tamaño de cada slice del vector
     let slice_size = (nums.len() as f64 / (threads - 2) as f64).ceil() as usize;
-    let mut results_slice: Vec<Vec<u64>> = Vec::with_capacity(threads-2);
+    // Vector de frecuencias por intervalo
+    let mut data_list: Vec<u64> = vec![0; intervals];
 
+    // Vector con las frecuencias parciales
+    let mut results_slice: Vec<Vec<u64>> = Vec::with_capacity(threads-2);
+    // Vector de tareas a iniciar, una por hilo del CPU, dejando 2 hilos sin utilizar
     let mut tasks = Vec::with_capacity(threads - 2);
 
+    // Copiar el contador de referencias del vector de números generados
     let nums_clone = Arc::clone(&nums);
+    // Por cada tarea a iniciar, iniciarla pasando como parámetro el vector entero,
+    // el índice por donde debe empezar y terminar de procesar
     for i in 0..threads-2 {
         let start = 0 + i * slice_size;
         let end = start + slice_size.min(nums.len() - start);
@@ -115,40 +123,43 @@ pub async fn full_statistics(
         tasks.push(task);
     }
 
+    // Obtener los resultados de las tareas una vez que terminen
     for task in tasks {
         let result = task.await.unwrap();
         results_slice.push(result);
     }
 
+    // Guardar los resultados en la lista final
     for vec in results_slice {
         for (i, &x) in vec.iter().enumerate() {
             data_list[i] += x;
         }
     }
-    /*for num in nums.iter() {
-        let ind = ((num - lower) / size) as usize;
-        let ind = ind.min(intervals - 1);
-        data_list[ind] += 1;
-    }*/
 
+    // Obtener las frecuencias esperadas según la distribución
     let exp_list: Vec<f64> = dist.get_expected(intervals, lower, upper);
 
+    // Cantidad de valores generados
     let len = nums.len() as f64;
     let mut calculated = 0f64;
+    // Sumatoria de (fo-fe)²/fe
     for (obs, exp) in data_list.iter().zip(exp_list) {
+        // Evitar errores de división por 0
         if exp == 0f64 {
             continue;
         }
         calculated += (*obs as f64 - exp * len).powi(2) / (exp * len);
     }
 
+    // Valor crítico del test de chi cuadrado
     let expected = chi_squared_critical_value(dist.get_degrees(intervals) as f64, 0.05);
 
+    // Valores a devolver
     let test = TestResult {
         calculated,
         expected,
     };
-    let hist = HistogramData {
+    let histogram = HistogramData {
         x: interval_list,
         y: data_list,
         lower,
@@ -156,7 +167,7 @@ pub async fn full_statistics(
         size,
     };
     let res = StatisticsResponse {
-        histogram: hist,
+        histogram,
         test,
     };
     res
