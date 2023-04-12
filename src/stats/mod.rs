@@ -102,7 +102,6 @@ pub async fn full_statistics(
 
     let mut data_list: Vec<u64> = vec![0; intervals];
     let threads: usize = std::thread::available_parallelism().unwrap().into();
-    dbg!(threads);
     let slice_size = (nums.len() as f64 / (threads - 2) as f64).ceil() as usize;
     let mut results_slice: Vec<Vec<u64>> = Vec::with_capacity(threads-2);
 
