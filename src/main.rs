@@ -11,6 +11,8 @@ mod controllers;
 
 #[tokio::main]
 async fn main() {
+    // Guarda el último Vec generado y su distribución
+    // Necesario para calcular estadísticas
     let last: Arc<RwLock<Generated>> = Arc::new(RwLock::new(Generated::new(
         vec![],
         Box::new(Uniform {
@@ -26,6 +28,8 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    // Permitir peticiones desde el puerto del web server, aceptando
+    // cualquier header
     let cors = CorsLayer::new()
         .allow_origin([
             "http://127.0.0.1:5173".parse().unwrap(),
@@ -34,6 +38,7 @@ async fn main() {
         .allow_headers(Any)
         .allow_methods([Method::GET, Method::POST]);
 
+    // Configurar rutas con sus métodos, CORS y estado
     let app = Router::new()
         .route("/api/generate", post(controllers::get_unified))
         .route("/api/histogram", post(controllers::get_histogram))
@@ -42,6 +47,7 @@ async fn main() {
         .layer(cors)
         .with_state(last);
 
+    // Crear servidor e iniciar en puerto 3000
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], 3000));
     tracing::debug!("Listening on {}", addr);
     axum::Server::bind(&addr)

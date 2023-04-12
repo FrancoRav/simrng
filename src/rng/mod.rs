@@ -1,15 +1,23 @@
+/// Interfaz de generador de números aleatorios
 pub trait Random {
+    /// Siguiente número a ser generado por el generador
     fn next(&mut self) -> f64;
 }
 
+/// Generador congruencial lineal, implementa interfaz Random
 pub struct LinearCongruentialGenerator {
-    x0: u64, // seed
-    m: u64,  // modulus
-    a: u64,  // multiplier
-    c: u64,  // increment
+    /// Semilla del generador, x0
+    x0: u64,
+    /// Módulo
+    m: u64,
+    /// Multiplicador
+    a: u64,
+    /// Incremento
+    c: u64,
 }
 
 impl LinearCongruentialGenerator {
+    /// Constructor sólo con la semilla, utilizando valores aceptables para m, a y c
     pub fn with_seed(x0: u64) -> Self {
         Self {
             x0,
@@ -19,6 +27,7 @@ impl LinearCongruentialGenerator {
         }
     }
 
+    /// Constructor completo
     pub fn new(x0: u64, m: u64, a: u64, c: u64) -> Self {
         Self { x0, m, a, c }
     }

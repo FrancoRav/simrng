@@ -4,11 +4,14 @@ use std::sync::Arc;
 
 use crate::dist::Distribution;
 
+/// Datos necesarios para calcular estadísticas
 #[derive(Deserialize)]
-pub struct HistogramInput {
+pub struct StatisticsInput {
+    /// Cantidad de intervalos a utilizar para los cálculos
     pub intervals: usize,
 }
 
+/// Datos a devolver para la generación del histograma
 #[derive(Serialize)]
 pub struct HistogramData {
     pub x: Vec<f64>,
@@ -18,19 +21,21 @@ pub struct HistogramData {
     pub size: f64,
 }
 
+/// Datos a devolver como resultado del test de chi cuadrado
 #[derive(Serialize)]
 pub struct TestResult {
     pub calculated: f64,
     pub expected: f64,
 }
 
+/// Respuesta del método full_statistics()
 #[derive(Serialize)]
 pub struct StatisticsResponse {
     pub histogram: HistogramData,
     pub test: TestResult,
 }
 
-pub fn generate_histogram(input: HistogramInput, nums: &Vec<f64>) -> HistogramData {
+pub fn generate_histogram(input: StatisticsInput, nums: &Vec<f64>) -> HistogramData {
     let lower = nums
         .iter()
         .min_by(|a, b| a.partial_cmp(b).unwrap())
@@ -67,8 +72,10 @@ pub fn generate_histogram(input: HistogramInput, nums: &Vec<f64>) -> HistogramDa
     }
 }
 
+/// Método que recibe la última distribución generada, la cantidad de intervalos
+/// y devuelve la respuesta con el test de chi-cuadrado y los datos del histograma
 pub fn full_statistics(
-    input: HistogramInput,
+    input: StatisticsInput,
     nums: &Vec<f64>,
     dist: Arc<Box<dyn Distribution + Send + Sync>>,
 ) -> StatisticsResponse {
@@ -132,7 +139,7 @@ pub fn full_statistics(
 }
 
 pub fn chi_squared_test(
-    input: HistogramInput,
+    input: StatisticsInput,
     nums: &Vec<f64>,
     dist: Arc<Box<dyn Distribution + Send + Sync>>,
 ) -> TestResult {

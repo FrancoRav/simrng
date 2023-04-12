@@ -1,7 +1,3 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
-
 pub mod dist;
 pub mod rng;
 pub mod stats;

@@ -2,22 +2,42 @@ use crate::rng::Random;
 use serde::Deserialize;
 use std::f64::consts::{E, PI};
 
+/// Interfaz requerida para cualquier distribución
 pub trait Distribution {
+    /// Devuelve el vector de frecuencias esperadas para cada intervalo
+    /// requerido por el test de chi cuadrado
+    ///
+    /// # Argumentos
+    /// * `intervals` cantidad de intervalos a usarse para la prueba
+    /// * `lower` límite inferior de los intervalos a calcular
+    /// * `upper` límite superior de los intervalos a calcular
     fn get_expected(&self, intervals: usize, lower: f64, upper: f64) -> Vec<f64>;
+    /// Devuelve los grados de libertad de la distribución para la prueba
+    /// de chi cuadrado
+    ///
+    /// # Argumentos
+    /// * `intervals` cantidad de intervalos a usarse para la prueba
     fn get_degrees(&self, intervals: usize) -> u64;
 }
 
+/// Algoritmo a usarse para la generación de una distribución Normal
 #[derive(Deserialize)]
 pub enum Algorithm {
     BoxMuller,
     Convolution,
 }
 
+/// Distribución Normal, permite su generación y cálculo de estadísticas
 #[derive(Deserialize)]
 pub struct Normal {
+    /// Algoritmo a utilizar para la generación
     pub algorithm: Algorithm,
+    /// Media de la distribución
     pub mean: f64,
+    /// Desviación estándar de la distribución
     pub sd: f64,
+    /// Para el caso de Box-Müller, next() devuelve el segundo número del par
+    /// generado cuando se llama por segunda vez
     pub pair: Option<f64>,
 }
 
@@ -44,16 +64,27 @@ impl Distribution for Normal {
 }
 
 impl Normal {
+    /// Devuelve el siguiente número a ser generado por la distribución
+    ///
+    /// # Argumentos
+    ///
+    /// * `rand` el generador de números aleatorios a utilizar, implementa Random
     pub fn next(&mut self, rand: &mut dyn Random) -> f64 {
+        // Define la variable a devolver, de tipo float de 64 bits
         let ret: f64;
         match self.algorithm {
             Algorithm::BoxMuller => match self.pair {
                 Some(x) => {
+                    // Si ya hay un valor generado que todavía no se devolvió
+                    // (el par del generado anterior), devolverlo
                     ret = x;
                     self.pair = None;
                 }
                 None => {
+                    // Si no, generar un par de valores nuevos por Box-Müller
                     let gen = self.get_bm(rand);
+                    // Guardar el segundo para devolverlo en la próxima invocación
+                    // y devolver el primero
                     self.pair = Some(gen.1);
                     ret = gen.0;
                 }
@@ -65,7 +96,10 @@ impl Normal {
         ret
     }
 
-    pub fn get_bm(&self, rand: &mut dyn Random) -> (f64, f64) {
+    // Funciones privadas, para uso por el generador
+
+    /// Devuelve un par de números generados por Box-Müller
+    fn get_bm(&self, rand: &mut dyn Random) -> (f64, f64) {
         let rnd1 = rand.next();
         let rnd2 = rand.next();
         let z1 = (-2f64 * (1f64 - rnd1).ln()).sqrt() * (2f64 * PI * rnd2).cos();
@@ -75,7 +109,8 @@ impl Normal {
         (n1, n2)
     }
 
-    pub fn get_conv(&self, rand: &mut dyn Random) -> f64 {
+    /// Devuelve un número generado por Convolución
+    fn get_conv(&self, rand: &mut dyn Random) -> f64 {
         let mut sum = 0.0;
         for _ in 0..12 {
             sum += rand.next();
@@ -85,9 +120,12 @@ impl Normal {
     }
 }
 
+/// Distribución Uniforme, permite su generación y cálculo de estadísticas
 #[derive(Deserialize)]
 pub struct Uniform {
+    /// Límite inferior de la distribución
     pub lower: f64,
+    /// Límite superior de la distribución
     pub upper: f64,
 }
 
@@ -122,13 +160,21 @@ impl Distribution for Uniform {
 }
 
 impl Uniform {
+    /// Devuelve el siguiente número a ser generado por la distribución
+    ///
+    /// # Argumentos
+    ///
+    /// * `rand` el generador de números aleatorios a utilizar, implementa Random
     pub fn next(&self, rand: &mut dyn Random) -> f64 {
+        // a + RND * (b-a)
         self.lower + rand.next() * (self.upper - self.lower)
     }
 }
 
+/// Distribución Exponencial, permite su generación y cálculo de estadísticas
 #[derive(Deserialize)]
 pub struct Exponential {
+    /// Lambda de la distribución
     pub lambda: f64,
 }
 
@@ -152,13 +198,21 @@ impl Distribution for Exponential {
 }
 
 impl Exponential {
+    /// Devuelve el siguiente número a ser generado por la distribución
+    ///
+    /// # Argumentos
+    ///
+    /// * `rand` el generador de números aleatorios a utilizar, implementa Random
     pub fn next(&self, rand: &mut dyn Random) -> f64 {
+        // (-1/λ) * ln(1-RND)
         -1f64 / self.lambda * f64::ln(1f64 - rand.next())
     }
 }
 
+/// Distribución Poisson, permite su generación y cálculo de estadísticas
 #[derive(Deserialize)]
 pub struct Poisson {
+    /// Lambda de la distribución
     pub lambda: f64,
 }
 
@@ -182,6 +236,11 @@ impl Distribution for Poisson {
 }
 
 impl Poisson {
+    /// Devuelve el siguiente número a ser generado por la distribución
+    ///
+    /// # Argumentos
+    ///
+    /// * `rand` el generador de números aleatorios a utilizar, implementa Random
     pub fn next(&self, rand: &mut dyn Random) -> f64 {
         let mut p: f64 = 1f64;
         let mut x: i64 = -1;
@@ -198,6 +257,7 @@ impl Poisson {
     }
 }
 
+// Función privada, requerida por get_expected() de Poisson
 fn factorial(n: f64) -> f64 {
     let prod: u64 = (0..n as u64).product();
     prod as f64
