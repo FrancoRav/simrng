@@ -35,7 +35,7 @@ pub struct GenerationParameters {
 /// Últimos datos generados, con los parámetros de su distribución
 pub struct Generated {
     /// Vector de números generados
-    pub data: Vec<f64>,
+    pub data: Arc<Vec<f64>>,
     /// Parámetros de la distribución
     pub dist: Arc<Box<dyn Distribution + Send + Sync>>,
 }
@@ -43,6 +43,7 @@ pub struct Generated {
 impl Generated {
     pub fn new(data: Vec<f64>, dist: Box<dyn Distribution + Send + Sync>) -> Self {
         let dist = Arc::new(dist);
+        let data = Arc::new(data);
         Self { data, dist }
     }
 }
@@ -59,7 +60,7 @@ pub async fn get_unified(
 ) {
     // Asegurarse de que ningún otro hilo pueda acceder al estado
     let mut arc = arc.write().await;
-    arc.data = vec![];
+    arc.data = Arc::new(vec![]);
     // Crear una instancia de generador de números aleatorios, con la semilla
     // de los parámetros de la generación
     let mut rng = LinearCongruentialGenerator::with_seed(data.seed);
@@ -145,6 +146,6 @@ pub async fn get_statistics(
     // Clonar la distribución (se podría pasar una referencia?)
     let dist = arc.dist.clone();
     // Guardar la respuesta del método y devolverla como Json
-    let res = full_statistics(data, &arc.data, dist);
+    let res = full_statistics(data, arc.data.clone(), dist).await;
     Json(res)
 }

@@ -74,9 +74,9 @@ pub fn generate_histogram(input: StatisticsInput, nums: &Vec<f64>) -> HistogramD
 
 /// Método que recibe la última distribución generada, la cantidad de intervalos
 /// y devuelve la respuesta con el test de chi-cuadrado y los datos del histograma
-pub fn full_statistics(
+pub async fn full_statistics(
     input: StatisticsInput,
-    nums: &Vec<f64>,
+    nums: Arc<Vec<f64>>,
     dist: Arc<Box<dyn Distribution + Send + Sync>>,
 ) -> StatisticsResponse {
     let lower = nums
@@ -101,11 +101,36 @@ pub fn full_statistics(
     }
 
     let mut data_list: Vec<u64> = vec![0; intervals];
-    for num in nums.iter() {
+    let threads: usize = std::thread::available_parallelism().unwrap().into();
+    dbg!(threads);
+    let slice_size = (nums.len() as f64 / (threads - 2) as f64).ceil() as usize;
+    let mut results_slice: Vec<Vec<u64>> = Vec::with_capacity(threads-2);
+
+    let mut tasks = Vec::with_capacity(threads - 2);
+
+    let nums_clone = Arc::clone(&nums);
+    for i in 0..threads-2 {
+        let start = 0 + i * slice_size;
+        let end = start + slice_size.min(nums.len() - start);
+        let task = tokio::task::spawn(parse_intervals(nums_clone.clone(), intervals, lower, size, start, end));
+        tasks.push(task);
+    }
+
+    for task in tasks {
+        let result = task.await.unwrap();
+        results_slice.push(result);
+    }
+
+    for vec in results_slice {
+        for (i, &x) in vec.iter().enumerate() {
+            data_list[i] += x;
+        }
+    }
+    /*for num in nums.iter() {
         let ind = ((num - lower) / size) as usize;
         let ind = ind.min(intervals - 1);
         data_list[ind] += 1;
-    }
+    }*/
 
     let exp_list: Vec<f64> = dist.get_expected(intervals, lower, upper);
 
@@ -136,6 +161,22 @@ pub fn full_statistics(
         test,
     };
     res
+}
+
+async fn parse_intervals(nums: Arc<Vec<f64>>, intervals: usize, lower: f64, size: f64, start: usize, end: usize) -> Vec<u64> {
+    let mut data_list: Vec<u64> = vec![0; intervals];
+    let opt = nums.get(start..end);
+    match opt {
+        Some(nums) => {
+            for num in nums.iter() {
+                let ind = ((num - lower) / size) as usize;
+                let ind = ind.min(intervals - 1);
+                data_list[ind] += 1;
+            }
+        }
+        None => {}
+    }
+    data_list
 }
 
 pub fn chi_squared_test(
