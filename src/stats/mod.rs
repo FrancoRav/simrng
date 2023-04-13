@@ -143,7 +143,37 @@ pub async fn full_statistics(
     let len = nums.len() as f64;
     let mut calculated = 0f64;
     // Sumatoria de (fo-fe)²/fe
+    let mut parsed_exp_list: Vec<f64> = Vec::with_capacity(intervals);
+    let mut parsed_obs_list: Vec<u64> = Vec::with_capacity(intervals);
+    let min_count = 5f64;
+    let mut new_intervals: usize = 0;
+    let mut current_obs = 0;
+    let mut current_exp = 0f64;
     for (obs, exp) in data_list.iter().zip(exp_list) {
+        if exp < min_count {
+            current_obs += obs;
+            current_exp += exp;
+        }
+        else {
+            parsed_obs_list.push(current_obs);
+            parsed_exp_list.push(current_exp);
+            new_intervals += 1;
+            current_obs = *obs;
+            current_exp = exp;
+        }
+    }
+    if current_exp >= min_count {
+        parsed_obs_list.push(current_obs);
+        parsed_exp_list.push(current_exp);
+        new_intervals += 1;
+    }
+    else {
+        let last = parsed_obs_list.pop().unwrap() + current_obs;
+        parsed_obs_list.push(last);
+        let last = parsed_exp_list.pop().unwrap() + current_exp;
+        parsed_exp_list.push(last);
+    }
+    for (obs, exp) in parsed_obs_list.iter().zip(parsed_exp_list) {
         // Evitar errores de división por 0
         if exp == 0f64 {
             continue;
@@ -152,7 +182,7 @@ pub async fn full_statistics(
     }
 
     // Valor crítico del test de chi cuadrado
-    let expected = chi_squared_critical_value(dist.get_degrees(intervals) as f64, 0.05);
+    let expected = chi_squared_critical_value(dist.get_degrees(new_intervals) as f64, 0.05);
 
     // Valores a devolver
     let test = TestResult {
