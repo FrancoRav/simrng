@@ -44,6 +44,7 @@ async fn main() {
         .route("/api/histogram", post(controllers::get_histogram))
         .route("/api/chisquared", post(controllers::get_chisquared))
         .route("/api/statistics", post(controllers::get_statistics))
+        .route("/api/page", post(controllers::get_page_numbers))
         .layer(cors)
         .with_state(last);
 

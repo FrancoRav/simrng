@@ -2,6 +2,7 @@ use axum::extract::State;
 use axum::{extract, Json};
 use serde::Deserialize;
 use simrng::dist::{Distribution, Exponential, Normal, Poisson, Uniform};
+use simrng::list::get_page;
 use simrng::rng::LinearCongruentialGenerator;
 use simrng::stats::{
     chi_squared_test, full_statistics, generate_histogram, HistogramData, StatisticsInput,
@@ -148,4 +149,18 @@ pub async fn get_statistics(
     // Guardar la respuesta del método y devolverla como Json
     let res = full_statistics(data, arc.data.clone(), dist).await;
     Json(res)
+}
+
+/// Método handler de petición para mostrar números de una página
+///
+/// # Argumentos
+///
+/// * `State(arc)` Un wrapper state al Arc que contiene el RwLock del estado
+/// * `data` número de página a devolver
+pub async fn get_page_numbers(
+    State(arc): State<Arc<RwLock<Generated>>>,
+    data: extract::Json<usize>,
+) -> Json<Vec<f64>> {
+    let arc = arc.read().await;
+    Json(get_page(arc.data.clone(), data.0))
 }
