@@ -28,6 +28,18 @@ pub struct TestResult {
     pub expected: f64,
 }
 
+#[derive(Serialize)]
+pub struct Interval {
+    pub lower: f64,
+    pub upper: f64,
+}
+
+impl Interval {
+    fn contains(&self, n: f64) -> bool {
+        return n >= self.lower && n < self.upper
+    }
+}
+
 /// Respuesta del método full_statistics()
 #[derive(Serialize)]
 pub struct StatisticsResponse {
