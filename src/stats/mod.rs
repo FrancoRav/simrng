@@ -137,7 +137,10 @@ pub async fn full_statistics(
     }
 
     // Obtener las frecuencias esperadas según la distribución
-    let exp_list: Vec<f64> = dist.get_expected(intervals, lower, upper);
+    let exp_list: Vec<f64> = dist.get_expected(intervals, lower, upper)
+        .iter()
+        .map(|n| n * nums.len() as f64)
+        .collect();
 
     // Cantidad de valores generados
     let len = nums.len() as f64;
@@ -150,16 +153,14 @@ pub async fn full_statistics(
     let mut current_obs = 0;
     let mut current_exp = 0f64;
     for (obs, exp) in data_list.iter().zip(exp_list) {
-        if exp < min_count {
-            current_obs += obs;
-            current_exp += exp;
-        }
-        else {
+        current_obs += obs;
+        current_exp += exp;
+        if current_exp >= min_count {
             parsed_obs_list.push(current_obs);
             parsed_exp_list.push(current_exp);
             new_intervals += 1;
-            current_obs = *obs;
-            current_exp = exp;
+            current_obs = 0;
+            current_exp = 0f64;
         }
     }
     if current_exp >= min_count {
@@ -168,17 +169,26 @@ pub async fn full_statistics(
         new_intervals += 1;
     }
     else {
-        let last = parsed_obs_list.pop().unwrap() + current_obs;
-        parsed_obs_list.push(last);
-        let last = parsed_exp_list.pop().unwrap() + current_exp;
-        parsed_exp_list.push(last);
+        let laste = parsed_exp_list.pop();
+        match laste {
+            Some(x) => {
+                parsed_exp_list.push(x + current_exp);
+                let lasto = parsed_obs_list.pop().unwrap();
+                parsed_obs_list.push(lasto + current_obs);
+            }
+            None => {
+                parsed_exp_list.push(current_exp);
+                parsed_obs_list.push(current_obs);
+                new_intervals += 1;
+            }
+        }
     }
     for (obs, exp) in parsed_obs_list.iter().zip(parsed_exp_list) {
         // Evitar errores de división por 0
         if exp == 0f64 {
             continue;
         }
-        calculated += (*obs as f64 - exp * len).powi(2) / (exp * len);
+        calculated += (*obs as f64 - exp).powi(2) / (exp);
     }
 
     // Valor crítico del test de chi cuadrado
