@@ -41,8 +41,6 @@ async fn main() {
     // Configurar rutas con sus métodos, CORS y estado
     let app = Router::new()
         .route("/api/generate", post(controllers::get_unified))
-        .route("/api/histogram", post(controllers::get_histogram))
-        .route("/api/chisquared", post(controllers::get_chisquared))
         .route("/api/statistics", post(controllers::get_statistics))
         .route("/api/page", post(controllers::get_page_numbers))
         .layer(cors)

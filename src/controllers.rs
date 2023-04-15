@@ -4,10 +4,7 @@ use serde::Deserialize;
 use simrng::dist::{Distribution, Exponential, Normal, Poisson, Uniform};
 use simrng::list::get_page;
 use simrng::rng::LinearCongruentialGenerator;
-use simrng::stats::{
-    chi_squared_test, full_statistics, generate_histogram, HistogramData, StatisticsInput,
-    StatisticsResponse, TestResult,
-};
+use simrng::stats::{full_statistics, StatisticsInput, StatisticsResponse};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -104,28 +101,6 @@ pub async fn get_unified(
     }
     // Guardar el vector generado y la distribución utilizada
     *arc = Generated::new(res, dist);
-}
-
-/// Método handler de la petición de generación de histograma
-pub async fn get_histogram(
-    State(arc): State<Arc<RwLock<Generated>>>,
-    data: extract::Json<StatisticsInput>,
-) -> Json<HistogramData> {
-    let data = data.0;
-    let arc = arc.read().await;
-    Json(generate_histogram(data, &arc.data))
-}
-
-/// Método handler de la petición de test de chi cuadrado
-pub async fn get_chisquared(
-    State(arc): State<Arc<RwLock<Generated>>>,
-    data: extract::Json<StatisticsInput>,
-) -> Json<TestResult> {
-    let data = data.0;
-    let arc = arc.read().await;
-    let dist = arc.dist.clone();
-    let res = chi_squared_test(data, &arc.data, dist);
-    Json(res)
 }
 
 /// Método handler de las peticiones de cálculo de estadísticas
