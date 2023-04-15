@@ -34,9 +34,24 @@ pub struct Interval {
     pub upper: f64,
 }
 
-impl Interval {
-    fn contains(&self, n: f64) -> bool {
-        return n >= self.lower && n < self.upper
+pub struct ChiInterval {
+    pub lower: f64,
+    pub upper: f64,
+    pub fo: u64,
+    pub fe: f64,
+    pub c: Option<f64>,
+}
+
+impl ChiInterval {
+    fn get_c(&self) -> f64 {
+        (self.fo as f64 - self.fe).powi(2) / self.fe
+    }
+
+    fn merge(&mut self, other: &ChiInterval) {
+        self.lower = self.lower.min(other.lower);
+        self.upper = self.upper.max(other.upper);
+        self.fo += other.fo;
+        self.fe += other.fe;
     }
 }
 
@@ -47,43 +62,6 @@ pub struct StatisticsResponse {
     pub test: TestResult,
 }
 
-pub fn generate_histogram(input: StatisticsInput, nums: &Vec<f64>) -> HistogramData {
-    let lower = nums
-        .iter()
-        .min_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap()
-        .floor();
-    let upper = nums
-        .iter()
-        .max_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap()
-        .ceil();
-    let intervals = input.intervals;
-    let size = (upper - lower) / intervals as f64;
-    let mut interval_list: Vec<f64> = Vec::with_capacity(intervals);
-    let mut interval = lower + (size / 2f64);
-
-    for _ in 0..intervals {
-        interval_list.push(interval);
-        interval += size;
-    }
-
-    let mut data_list: Vec<u64> = vec![0; intervals];
-    for num in nums.iter() {
-        let ind = ((num - lower) / size) as usize;
-        let ind = ind.min(intervals - 1);
-        data_list[ind] += 1;
-    }
-
-    HistogramData {
-        x: interval_list,
-        y: data_list,
-        lower,
-        upper,
-        size,
-    }
-}
-
 /// Método que recibe la última distribución generada, la cantidad de intervalos
 /// y devuelve la respuesta con el test de chi-cuadrado y los datos del histograma
 pub async fn full_statistics(
@@ -91,25 +69,34 @@ pub async fn full_statistics(
     nums: Arc<Vec<f64>>,
     dist: Arc<Box<dyn Distribution + Send + Sync>>,
 ) -> StatisticsResponse {
+    // Tomar el límite inferior y superior de la distribución
     let lower = nums
         .iter()
         .min_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap()
+        .unwrap_or(&0f64)
         .floor();
     let upper = nums
         .iter()
         .max_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap()
+        .unwrap_or(&0f64)
         .ceil();
+    // Tomar la cantidad de intervalos y el tamaño de cada uno
     let intervals = input.intervals;
     let size = (upper - lower) / intervals as f64;
 
-    let mut interval_list: Vec<f64> = Vec::with_capacity(intervals);
-    let mut interval = lower + (size / 2f64);
+    // Crear listas necesarias
+    let mut interval_list: Vec<Interval> = Vec::with_capacity(intervals);
+    let mut classmark_list: Vec<f64> = Vec::with_capacity(intervals);
+    let mut interval_min = lower;
 
+    // Agregar intervalos y marcas de clases a las listas
     for _ in 0..intervals {
-        interval_list.push(interval);
-        interval += size;
+        interval_list.push(Interval {
+            lower: interval_min,
+            upper: interval_min + size,
+        });
+        classmark_list.push(interval_min + size / 2f64);
+        interval_min += size;
     }
 
     // Cantidad de hilos del CPU
@@ -120,7 +107,7 @@ pub async fn full_statistics(
     let mut data_list: Vec<u64> = vec![0; intervals];
 
     // Vector con las frecuencias parciales
-    let mut results_slice: Vec<Vec<u64>> = Vec::with_capacity(threads-2);
+    let mut results_slice: Vec<Vec<u64>> = Vec::with_capacity(threads - 2);
     // Vector de tareas a iniciar, una por hilo del CPU, dejando 2 hilos sin utilizar
     let mut tasks = Vec::with_capacity(threads - 2);
 
@@ -128,10 +115,17 @@ pub async fn full_statistics(
     let nums_clone = Arc::clone(&nums);
     // Por cada tarea a iniciar, iniciarla pasando como parámetro el vector entero,
     // el índice por donde debe empezar y terminar de procesar
-    for i in 0..threads-2 {
+    for i in 0..threads - 2 {
         let start = 0 + i * slice_size;
         let end = start + slice_size.min(nums.len() - start);
-        let task = tokio::task::spawn(parse_intervals(nums_clone.clone(), intervals, lower, size, start, end));
+        let task = tokio::task::spawn(parse_intervals(
+            nums_clone.clone(),
+            intervals,
+            lower,
+            size,
+            start,
+            end,
+        ));
         tasks.push(task);
     }
 
@@ -149,62 +143,59 @@ pub async fn full_statistics(
     }
 
     // Obtener las frecuencias esperadas según la distribución
-    let exp_list: Vec<f64> = dist.get_expected(intervals, lower, upper)
+    let exp_list: Vec<f64> = dist
+        .get_expected(intervals, lower, upper);
+    let exp_list: Vec<f64> = exp_list
         .iter()
         .map(|n| n * nums.len() as f64)
         .collect();
 
-    // Cantidad de valores generados
-    let len = nums.len() as f64;
-    let mut calculated = 0f64;
-    // Sumatoria de (fo-fe)²/fe
-    let mut parsed_exp_list: Vec<f64> = Vec::with_capacity(intervals);
-    let mut parsed_obs_list: Vec<u64> = Vec::with_capacity(intervals);
-    let min_count = 5f64;
-    let mut new_intervals: usize = 0;
-    let mut current_obs = 0;
-    let mut current_exp = 0f64;
-    for (obs, exp) in data_list.iter().zip(exp_list) {
-        current_obs += obs;
-        current_exp += exp;
-        if current_exp >= min_count {
-            parsed_obs_list.push(current_obs);
-            parsed_exp_list.push(current_exp);
-            new_intervals += 1;
-            current_obs = 0;
-            current_exp = 0f64;
+    let intervals: Vec<ChiInterval> = data_list
+        .iter()
+        .zip(exp_list)
+        .zip(interval_list)
+        .map(|((fo, fe), int)| ChiInterval {
+            lower: int.lower,
+            upper: int.upper,
+            fo: *fo,
+            fe,
+            c: None,
+        })
+        .collect();
+
+    let mut merged_intervals: Vec<ChiInterval> = Vec::with_capacity(intervals.len());
+    let mut pending: Option<ChiInterval> = None;
+    for mut interval in intervals {
+        if let Some(int) = &mut pending {
+            interval.merge(&int);
+            pending = None;
+        }
+        if interval.fe >= 5f64 {
+            merged_intervals.push(interval);
+        } else {
+            pending = Some(interval);
         }
     }
-    if current_exp >= min_count {
-        parsed_obs_list.push(current_obs);
-        parsed_exp_list.push(current_exp);
-        new_intervals += 1;
-    }
-    else {
-        let laste = parsed_exp_list.pop();
-        match laste {
-            Some(x) => {
-                parsed_exp_list.push(x + current_exp);
-                let lasto = parsed_obs_list.pop().unwrap();
-                parsed_obs_list.push(lasto + current_obs);
-            }
+
+    if let Some(int) = &mut pending {
+        match merged_intervals.last_mut() {
+            Some(interval) => {
+                interval.merge(&int);
+            },
             None => {
-                parsed_exp_list.push(current_exp);
-                parsed_obs_list.push(current_obs);
-                new_intervals += 1;
+                merged_intervals.push(pending.take().unwrap());
             }
         }
     }
-    for (obs, exp) in parsed_obs_list.iter().zip(parsed_exp_list) {
-        // Evitar errores de división por 0
-        if exp == 0f64 {
-            continue;
-        }
-        calculated += (*obs as f64 - exp).powi(2) / (exp);
+
+    // Sumatoria de (fo-fe)²/fe
+    let mut calculated = 0f64;
+    for interval in merged_intervals.iter() {
+        calculated += interval.get_c();
     }
 
     // Valor crítico del test de chi cuadrado
-    let expected = chi_squared_critical_value(dist.get_degrees(new_intervals) as f64, 0.05);
+    let expected = chi_squared_critical_value(dist.get_degrees(merged_intervals.len()) as f64, 0.05);
 
     // Valores a devolver
     let test = TestResult {
@@ -212,20 +203,24 @@ pub async fn full_statistics(
         expected,
     };
     let histogram = HistogramData {
-        x: interval_list,
+        x: classmark_list,
         y: data_list,
         lower,
         upper,
         size,
     };
-    let res = StatisticsResponse {
-        histogram,
-        test,
-    };
+    let res = StatisticsResponse { histogram, test };
     res
 }
 
-async fn parse_intervals(nums: Arc<Vec<f64>>, intervals: usize, lower: f64, size: f64, start: usize, end: usize) -> Vec<u64> {
+async fn parse_intervals(
+    nums: Arc<Vec<f64>>,
+    intervals: usize,
+    lower: f64,
+    size: f64,
+    start: usize,
+    end: usize,
+) -> Vec<u64> {
     let mut data_list: Vec<u64> = vec![0; intervals];
     let opt = nums.get(start..end);
     match opt {
@@ -241,51 +236,14 @@ async fn parse_intervals(nums: Arc<Vec<f64>>, intervals: usize, lower: f64, size
     data_list
 }
 
-pub fn chi_squared_test(
-    input: StatisticsInput,
-    nums: &Vec<f64>,
-    dist: Arc<Box<dyn Distribution + Send + Sync>>,
-) -> TestResult {
-    let lower = nums
-        .iter()
-        .min_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap()
-        .floor();
-    let upper = nums
-        .iter()
-        .max_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap()
-        .ceil();
-    let intervals = input.intervals;
-    let size = (upper - lower) / intervals as f64;
-
-    let mut data_list: Vec<u64> = vec![0; intervals];
-    for num in nums.iter() {
-        let ind = ((num - lower) / size) as usize;
-        let ind = ind.min(intervals - 1);
-        data_list[ind] += 1;
-    }
-
-    let exp_list: Vec<f64> = dist.get_expected(intervals, lower, upper);
-
-    let len = nums.len() as f64;
-    let mut calculated = 0f64;
-    for (obs, exp) in data_list.iter().zip(exp_list) {
-        if exp == 0f64 {
-            continue;
-        }
-        calculated += (*obs as f64 - exp * len).powi(2) / (exp * len);
-    }
-
-    let expected = chi_squared_critical_value(dist.get_degrees(intervals) as f64, 0.05);
-
-    let res = TestResult {
-        calculated,
-        expected,
-    };
-    res
+pub fn chi_squared_critical_value(df: f64, alpha: f64) -> f64 {
+    let z = 1.0 - alpha;
+    let a = df / 2.0;
+    let x = 2.0 * gamma_inverse(z, a);
+    x
 }
 
+// Funciones auxiliares privadas, cálculo matemático del valor crítico
 fn gamma_incomplete_upper(a: f64, x: f64) -> f64 {
     let epsilon = 1e-8;
     let mut s = 0.0;
@@ -309,12 +267,5 @@ fn gamma_inverse(z: f64, a: f64) -> f64 {
         let df = x.powf(a - 1.0) * (-x).exp();
         x -= f / df;
     }
-    x
-}
-
-pub fn chi_squared_critical_value(df: f64, alpha: f64) -> f64 {
-    let z = 1.0 - alpha;
-    let a = df / 2.0;
-    let x = 2.0 * gamma_inverse(z, a);
     x
 }
