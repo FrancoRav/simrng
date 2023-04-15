@@ -167,7 +167,7 @@ mod tests {
             Arc::new(Box::new(normal)),
         ));
         let test: TestResult = res.test;
-        assert_eq!(trunc_to_dec(test.expected, 1), 14.0);
+        assert_eq!(trunc_to_dec(test.critical, 1), 14.0);
         assert_eq!(trunc_to_dec(test.calculated, 1), 10.1);
     }
 

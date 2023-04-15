@@ -24,9 +24,12 @@ pub struct HistogramData {
 /// Datos a devolver como resultado del test de chi cuadrado
 #[derive(Serialize)]
 pub struct TestResult {
+    /// tabla de cálculo
     pub intervals: Vec<ChiInterval>,
+    /// chi cuadrado calculado
     pub calculated: f64,
-    pub expected: f64,
+    /// valor crítico, chi cuadrado tabulado
+    pub critical: f64,
 }
 
 #[derive(Serialize)]
@@ -35,11 +38,14 @@ pub struct Interval {
     pub upper: f64,
 }
 
+/// Fila de la tabla del cálculo de Chi Cuadrado
 #[derive(Serialize)]
 pub struct ChiInterval {
     pub lower: f64,
     pub upper: f64,
+    /// frecuencia observada
     pub fo: u64,
+    /// frecuencia esperada
     pub fe: f64,
     pub c: Option<f64>,
     pub c_ac: Option<f64>,
@@ -49,10 +55,11 @@ impl ChiInterval {
     fn set_c(&mut self, cumulative: f64) -> f64 {
         let c = (self.fo as f64 - self.fe).powi(2) / self.fe;
         self.c = Some(c);
-        self.c_ac = Some(cumulative+c);
+        self.c_ac = Some(cumulative + c);
         c
     }
 
+    /// Une el intervalo con otro, pasado como referencia
     fn merge(&mut self, other: &ChiInterval) {
         self.lower = self.lower.min(other.lower);
         self.upper = self.upper.max(other.upper);
@@ -150,16 +157,19 @@ pub async fn full_statistics(
 
     // Obtener las frecuencias esperadas según la distribución
     let exp_list: Vec<f64> = dist
-        .get_expected(intervals, lower, upper);
-    let exp_list: Vec<f64> = exp_list
+        .get_expected(intervals, lower, upper)
         .iter()
         .map(|n| n * nums.len() as f64)
         .collect();
 
+    // Unir la lista de intervalos, de frecuencias esperadas y de frecuencias observadas
+    // en una lista de ChiInterval
     let intervals: Vec<ChiInterval> = data_list
         .iter()
+        // Iterar sobre las tres listas a la vez
         .zip(exp_list)
         .zip(interval_list)
+        // por cada intervalo, crear el objeto necesario
         .map(|((fo, fe), int)| ChiInterval {
             lower: int.lower,
             upper: int.upper,
@@ -170,6 +180,7 @@ pub async fn full_statistics(
         })
         .collect();
 
+    // Lista de intervalos después de combinar los que tienen fe < 5
     let mut merged_intervals: Vec<ChiInterval> = Vec::with_capacity(intervals.len());
     let mut pending: Option<ChiInterval> = None;
     for mut interval in intervals {
@@ -188,7 +199,7 @@ pub async fn full_statistics(
         match merged_intervals.last_mut() {
             Some(interval) => {
                 interval.merge(&int);
-            },
+            }
             None => {
                 merged_intervals.push(pending.take().unwrap());
             }
@@ -202,13 +213,14 @@ pub async fn full_statistics(
     }
 
     // Valor crítico del test de chi cuadrado
-    let expected = chi_squared_critical_value(dist.get_degrees(merged_intervals.len()) as f64, 0.05);
+    let critical =
+        chi_squared_critical_value(dist.get_degrees(merged_intervals.len()) as f64, 0.05);
 
     // Valores a devolver
     let test = TestResult {
         intervals: merged_intervals,
         calculated,
-        expected,
+        critical,
     };
     let histogram = HistogramData {
         x: classmark_list,
