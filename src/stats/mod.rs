@@ -180,31 +180,7 @@ pub async fn full_statistics(
         })
         .collect();
 
-    // Lista de intervalos después de combinar los que tienen fe < 5
-    let mut merged_intervals: Vec<ChiInterval> = Vec::with_capacity(intervals.len());
-    let mut pending: Option<ChiInterval> = None;
-    for mut interval in intervals {
-        if let Some(int) = &mut pending {
-            interval.merge(&int);
-            pending = None;
-        }
-        if interval.fe >= 5f64 {
-            merged_intervals.push(interval);
-        } else {
-            pending = Some(interval);
-        }
-    }
-
-    if let Some(int) = &mut pending {
-        match merged_intervals.last_mut() {
-            Some(interval) => {
-                interval.merge(&int);
-            }
-            None => {
-                merged_intervals.push(pending.take().unwrap());
-            }
-        }
-    }
+    let mut merged_intervals = merge_intervals(intervals);
 
     // Sumatoria de (fo-fe)²/fe
     let mut calculated = 0f64;
@@ -231,6 +207,35 @@ pub async fn full_statistics(
     };
     let res = StatisticsResponse { histogram, test };
     res
+}
+
+fn merge_intervals(intervals: Vec<ChiInterval>) -> Vec<ChiInterval> {
+    // Lista de intervalos después de combinar los que tienen fe < 5
+    let mut merged_intervals: Vec<ChiInterval> = Vec::with_capacity(intervals.len());
+    let mut pending: Option<ChiInterval> = None;
+    for mut interval in intervals {
+        if let Some(int) = &mut pending {
+            interval.merge(&int);
+            pending = None;
+        }
+        if interval.fe >= 5f64 {
+            merged_intervals.push(interval);
+        } else {
+            pending = Some(interval);
+        }
+    }
+
+    if let Some(int) = &mut pending {
+        match merged_intervals.last_mut() {
+            Some(interval) => {
+                interval.merge(&int);
+            }
+            None => {
+                merged_intervals.push(pending.take().unwrap());
+            }
+        }
+    }
+    merged_intervals
 }
 
 async fn parse_intervals(
