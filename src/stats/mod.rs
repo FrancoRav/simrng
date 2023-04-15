@@ -42,11 +42,15 @@ pub struct ChiInterval {
     pub fo: u64,
     pub fe: f64,
     pub c: Option<f64>,
+    pub c_ac: Option<f64>,
 }
 
 impl ChiInterval {
-    fn get_c(&self) -> f64 {
-        (self.fo as f64 - self.fe).powi(2) / self.fe
+    fn set_c(&mut self, cumulative: f64) -> f64 {
+        let c = (self.fo as f64 - self.fe).powi(2) / self.fe;
+        self.c = Some(c);
+        self.c_ac = Some(cumulative+c);
+        c
     }
 
     fn merge(&mut self, other: &ChiInterval) {
@@ -162,6 +166,7 @@ pub async fn full_statistics(
             fo: *fo,
             fe,
             c: None,
+            c_ac: None,
         })
         .collect();
 
@@ -192,8 +197,8 @@ pub async fn full_statistics(
 
     // Sumatoria de (fo-fe)²/fe
     let mut calculated = 0f64;
-    for interval in merged_intervals.iter() {
-        calculated += interval.get_c();
+    for interval in merged_intervals.iter_mut() {
+        calculated += interval.set_c(calculated);
     }
 
     // Valor crítico del test de chi cuadrado
