@@ -24,6 +24,7 @@ pub struct HistogramData {
 /// Datos a devolver como resultado del test de chi cuadrado
 #[derive(Serialize)]
 pub struct TestResult {
+    pub intervals: Vec<ChiInterval>,
     pub calculated: f64,
     pub expected: f64,
 }
@@ -34,6 +35,7 @@ pub struct Interval {
     pub upper: f64,
 }
 
+#[derive(Serialize)]
 pub struct ChiInterval {
     pub lower: f64,
     pub upper: f64,
@@ -199,6 +201,7 @@ pub async fn full_statistics(
 
     // Valores a devolver
     let test = TestResult {
+        intervals: merged_intervals,
         calculated,
         expected,
     };
