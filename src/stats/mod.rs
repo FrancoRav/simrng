@@ -8,6 +8,7 @@ use crate::dist::Distribution;
 pub struct StatisticsInput {
     /// Cantidad de intervalos a utilizar para los cálculos
     pub intervals: usize,
+    pub significance: usize,
 }
 
 /// Datos a devolver para la generación del histograma
@@ -94,6 +95,7 @@ pub async fn full_statistics(
         .ceil();
     // Tomar la cantidad de intervalos y el tamaño de cada uno
     let intervals = input.intervals;
+    let significance = input.significance;
     let size = (upper - lower) / intervals as f64;
 
     // Crear listas necesarias
