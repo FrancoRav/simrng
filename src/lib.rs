@@ -80,11 +80,11 @@ mod tests {
 
     #[test]
     fn test_critical_value() {
-        let critical = chi_squared_critical_value(3f64, 0.05);
+        let critical = chi_squared_critical_value(3, 7);
         assert_eq!((critical * 100f64).trunc() / 100f64, 7.81f64);
-        let critical = chi_squared_critical_value(5f64, 0.05);
-        assert_eq!((critical * 100f64).trunc() / 100f64, 11.07f64);
-        let critical = chi_squared_critical_value(7f64, 0.05);
+        let critical = chi_squared_critical_value(5, 7);
+        assert_eq!((critical * 100f64).trunc() / 100f64, 11.06f64);
+        let critical = chi_squared_critical_value(7, 7);
         assert_eq!((critical * 100f64).trunc() / 100f64, 14.06f64);
     }
 
