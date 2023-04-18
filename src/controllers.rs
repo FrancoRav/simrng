@@ -1,7 +1,11 @@
 use axum::extract::State;
 use axum::{extract, Json};
 use serde::Deserialize;
-use simrng::dist::{Distribution, Exponential, Normal, Poisson, Uniform};
+use simrng::dist::exponential::Exponential;
+use simrng::dist::normal::Normal;
+use simrng::dist::poisson::Poisson;
+use simrng::dist::uniform::Uniform;
+use simrng::dist::Distribution;
 use simrng::list::get_page;
 use simrng::rng::LinearCongruentialGenerator;
 use simrng::stats::{full_statistics, StatisticsInput, StatisticsResponse};

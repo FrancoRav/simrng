@@ -9,22 +9,21 @@ mod tests {
 
     use super::*;
     use crate::{
-        dist::Normal,
         rng::{LinearCongruentialGenerator, Random},
-        stats::{full_statistics, TestResult},
+        stats::{full_statistics, TestResult}, dist::{uniform::Uniform, normal::{Normal, Algorithm}},
     };
     use dist::Distribution;
     use stats::chi_squared_critical_value;
 
     #[test]
     fn test_expected_uniform() {
-        let uniform = dist::Uniform {
+        let uniform = Uniform {
             lower: 0f64,
             upper: 5f64,
         };
         let data = uniform.get_expected(5, 0f64, 5f64);
         assert_eq!(vec![0.2; 5], data);
-        let uniform = dist::Uniform {
+        let uniform = Uniform {
             lower: 0f64,
             upper: 0.5,
         };
@@ -34,10 +33,10 @@ mod tests {
 
     #[test]
     fn test_expected_normal() {
-        let normal = dist::Normal {
+        let normal = Normal {
             mean: 10f64,
             sd: 2f64,
-            algorithm: dist::Algorithm::BoxMuller,
+            algorithm: Algorithm::BoxMuller,
             pair: None,
         };
         let data: Vec<f64> = normal
@@ -59,10 +58,10 @@ mod tests {
             data
         );
 
-        let normal = dist::Normal {
+        let normal = Normal {
             mean: 182.41f64,
             sd: 7.01f64,
-            algorithm: dist::Algorithm::BoxMuller,
+            algorithm: Algorithm::BoxMuller,
             pair: None,
         };
         let data: Vec<f64> = normal
@@ -93,7 +92,7 @@ mod tests {
         let mut normal = Normal {
             mean: 10f64,
             sd: 2f64,
-            algorithm: dist::Algorithm::BoxMuller,
+            algorithm: Algorithm::BoxMuller,
             pair: None,
         };
         let mut random = LinearCongruentialGenerator::new(6, 8, 13, 7);
@@ -106,7 +105,7 @@ mod tests {
         let mut normal = Normal {
             mean: 10f64,
             sd: 2f64,
-            algorithm: dist::Algorithm::Convolution,
+            algorithm: Algorithm::Convolution,
             pair: None,
         };
         let mut random = LinearCongruentialGenerator::new(6, 8, 13, 7);
@@ -155,7 +154,7 @@ mod tests {
             170f64, 183f64, 185f64, 184f64, 173f64, 191f64, 175f64,
         ];
         let normal = Normal {
-            algorithm: dist::Algorithm::BoxMuller,
+            algorithm: Algorithm::BoxMuller,
             mean: 182.41f64,
             sd: 7.01f64,
             pair: None,
