@@ -161,7 +161,7 @@ mod tests {
         };
         let rt = tokio::runtime::Runtime::new().unwrap();
         let res = rt.block_on(full_statistics(
-            stats::StatisticsInput { intervals: 12 },
+            stats::StatisticsInput { intervals: 12, significance: 7 },
             Arc::new(nums),
             Arc::new(Box::new(normal)),
         ));
