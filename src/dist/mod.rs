@@ -1,6 +1,6 @@
 use crate::rng::Random;
 use serde::Deserialize;
-use std::f64::consts::{E, PI};
+use std::f64::consts::PI;
 
 /// Interfaz requerida para cualquier distribución
 pub trait Distribution {
@@ -244,7 +244,7 @@ impl Poisson {
     pub fn next(&self, rand: &mut dyn Random) -> f64 {
         let mut p: f64 = 1f64;
         let mut x: i64 = -1;
-        let a = E.powf(-self.lambda);
+        let a = f64::exp(-self.lambda);
         loop {
             let u = rand.next();
             p *= u;
