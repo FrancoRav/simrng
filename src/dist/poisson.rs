@@ -23,8 +23,8 @@ impl Distribution for Poisson {
         interval_list
     }
 
-    fn get_degrees(&self, intervals: usize) -> u64 {
-        intervals as u64 - 2
+    fn get_degrees(&self, intervals: usize) -> usize {
+        intervals - 2
     }
 }
 

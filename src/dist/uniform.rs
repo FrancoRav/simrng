@@ -36,8 +36,8 @@ impl Distribution for Uniform {
         interval_list
     }
 
-    fn get_degrees(&self, intervals: usize) -> u64 {
-        intervals as u64 - 1
+    fn get_degrees(&self, intervals: usize) -> usize {
+        intervals - 1
     }
 }
 

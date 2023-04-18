@@ -41,8 +41,8 @@ impl Distribution for Normal {
         }
         interval_list
     }
-    fn get_degrees(&self, intervals: usize) -> u64 {
-        intervals as u64 - 3
+    fn get_degrees(&self, intervals: usize) -> usize {
+        intervals - 3
     }
 }
 

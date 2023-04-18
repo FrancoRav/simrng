@@ -191,7 +191,7 @@ pub async fn full_statistics(
 
     // Valor crítico del test de chi cuadrado
     let critical =
-        chi_squared_critical_value(dist.get_degrees(merged_intervals.len()), 7);
+        chi_squared_critical_value(dist.get_degrees(merged_intervals.len()), significance);
 
     // Valores a devolver
     let test = TestResult {
@@ -259,7 +259,7 @@ async fn parse_intervals(
     data_list
 }
 
-pub fn chi_squared_critical_value(df: u64, alpha: u64) -> f64 {
+pub fn chi_squared_critical_value(df: usize, alpha: usize) -> f64 {
     let list: [[f32; 100]; 10] = [
         [
             0.0, 0.002, 0.024, 0.091, 0.21, 0.381, 0.598, 0.857, 1.152, 1.479, 1.8341, 2.2142,
@@ -380,6 +380,6 @@ pub fn chi_squared_critical_value(df: u64, alpha: u64) -> f64 {
         ],
     ];
     let df = df.min(100);
-    list[alpha as usize - 1][df as usize - 1] as f64
+    list[alpha - 1][df - 1] as f64
 }
 

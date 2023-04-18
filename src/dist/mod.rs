@@ -18,6 +18,6 @@ pub trait Distribution {
     ///
     /// # Argumentos
     /// * `intervals` cantidad de intervalos a usarse para la prueba
-    fn get_degrees(&self, intervals: usize) -> u64;
+    fn get_degrees(&self, intervals: usize) -> usize;
 }
 
