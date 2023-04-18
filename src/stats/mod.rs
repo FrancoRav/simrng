@@ -247,15 +247,12 @@ async fn parse_intervals(
 ) -> Vec<u64> {
     let mut data_list: Vec<u64> = vec![0; intervals];
     let opt = nums.get(start..end);
-    match opt {
-        Some(nums) => {
-            for num in nums.iter() {
-                let ind = ((num - lower) / size) as usize;
-                let ind = ind.min(intervals - 1);
-                data_list[ind] += 1;
-            }
+    if let Some(nums) = opt {
+        for num in nums.iter() {
+            let ind = ((num - lower) / size) as usize;
+            let ind = ind.min(intervals - 1);
+            data_list[ind] += 1;
         }
-        None => {}
     }
     data_list
 }
