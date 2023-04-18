@@ -36,9 +36,15 @@ async fn main() {
         .layer(cors)
         .with_state(last);
 
+    let port;
+    if let Ok(n) = std::env::var("SIMRNG_PORT") {
+        port = n.parse().unwrap_or(3000);
+    } else {
+        port = 3000;
+    }
     // Crear servidor e iniciar en puerto 3000
-    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], 3000));
     tracing::debug!("Listening on {}", addr);
+    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
