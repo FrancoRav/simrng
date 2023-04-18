@@ -380,7 +380,7 @@ pub fn chi_squared_critical_value(df: u64, alpha: u64) -> f64 {
             142.119, 143.344, 144.567, 145.789, 147.01, 148.23, 149.449,
         ],
     ];
-
+    let df = df.max(100);
     list[alpha as usize - 1][df as usize - 1] as f64
 }
 
