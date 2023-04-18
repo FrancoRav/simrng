@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use crate::controllers::Generated;
 use axum::{http::Method, routing::post, Router};
-use simrng::dist::Uniform;
 use tokio::sync::RwLock;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -13,13 +12,7 @@ mod controllers;
 async fn main() {
     // Guarda el último Vec generado y su distribución
     // Necesario para calcular estadísticas
-    let last: Arc<RwLock<Generated>> = Arc::new(RwLock::new(Generated::new(
-        vec![],
-        Box::new(Uniform {
-            lower: 10f64,
-            upper: 11f64,
-        }),
-    )));
+    let last: Arc<RwLock<Generated>> = Arc::new(RwLock::new(Generated::default()));
 
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(

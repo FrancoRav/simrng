@@ -50,6 +50,18 @@ impl Generated {
     }
 }
 
+impl Default for Generated {
+    fn default() -> Self {
+        Generated::new(
+            vec![],
+            Box::new(Uniform {
+                lower: 10f64,
+                upper: 11f64,
+            }),
+        )
+    }
+}
+
 /// Método handler de las peticiones de generación de valores
 ///
 /// # Argumentos
