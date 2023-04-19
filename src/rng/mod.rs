@@ -1,4 +1,4 @@
-use rand::{RngCore, Rng};
+use rand::Rng;
 
 /// Interfaz de generador de números aleatorios
 pub trait Random {
