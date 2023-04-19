@@ -1,3 +1,5 @@
+use rand::{RngCore, Rng};
+
 /// Interfaz de generador de números aleatorios
 pub trait Random {
     /// Siguiente número a ser generado por el generador
@@ -37,5 +39,11 @@ impl Random for LinearCongruentialGenerator {
     fn next(&mut self) -> f64 {
         self.x0 = (self.a * self.x0 + self.c) % self.m;
         self.x0 as f64 / self.m as f64
+    }
+}
+
+impl<T: Rng> Random for T {
+    fn next(&mut self) -> f64 {
+        self.gen_range(0.0..1.0)
     }
 }

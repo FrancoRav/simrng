@@ -1,5 +1,7 @@
 use axum::extract::{State, Query};
 use axum::{extract, Json};
+use rand::SeedableRng;
+use rand::rngs::StdRng;
 use serde::Deserialize;
 use simrng::dist::exponential::Exponential;
 use simrng::dist::normal::Normal;
@@ -7,7 +9,6 @@ use simrng::dist::poisson::Poisson;
 use simrng::dist::uniform::Uniform;
 use simrng::dist::Distribution;
 use simrng::list::get_page;
-use simrng::rng::LinearCongruentialGenerator;
 use simrng::stats::{full_statistics, StatisticsInput, StatisticsResponse};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -82,7 +83,7 @@ pub async fn get_unified(
     arc.data = Arc::new(vec![]);
     // Crear una instancia de generador de números aleatorios, con la semilla
     // de los parámetros de la generación
-    let mut rng = LinearCongruentialGenerator::with_seed(data.seed);
+    let mut rng = StdRng::from_seed(rand::random());
     // Crear el vector en el que se guardan los datos, con capacidad
     // suficiente para la cantidad de valores a generar
     let mut res = Vec::with_capacity(data.number as usize);
