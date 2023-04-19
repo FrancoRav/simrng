@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::controllers::Generated;
-use axum::{http::Method, routing::post, Router};
+use axum::{http::Method, routing::post, routing::get, Router};
 use tokio::sync::RwLock;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -32,7 +32,7 @@ async fn main() {
     let app = Router::new()
         .route("/api/generate", post(controllers::get_unified))
         .route("/api/statistics", post(controllers::get_statistics))
-        .route("/api/page", post(controllers::get_page_numbers))
+        .route("/api/page", get(controllers::get_page_numbers))
         .layer(cors)
         .with_state(last);
 
