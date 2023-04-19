@@ -38,6 +38,12 @@ pub struct Interval {
     pub upper: f64,
 }
 
+pub struct DistributionLimits {
+    pub lower: f64,
+    pub upper: f64,
+    pub intervals: usize,
+}
+
 /// Fila de la tabla del cálculo de Chi Cuadrado
 #[derive(Serialize)]
 pub struct ChiInterval {
@@ -95,6 +101,12 @@ pub async fn full_statistics(
         .ceil();
     // Tomar la cantidad de intervalos y el tamaño de cada uno
     let intervals = input.intervals;
+    let limits = DistributionLimits { lower, upper, intervals };
+    let limits = dist.get_intervals(limits);
+    let upper = limits.upper;
+    let lower = limits.lower;
+    let intervals = limits.intervals;
+
     let significance = input.significance;
     let size = (upper - lower) / intervals as f64;
 
@@ -380,6 +392,7 @@ pub fn chi_squared_critical_value(df: usize, alpha: usize) -> f64 {
         ],
     ];
     let df = df.min(100);
+    // overflow error
     list[alpha - 1][df - 1] as f64
 }
 

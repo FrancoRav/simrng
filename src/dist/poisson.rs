@@ -1,4 +1,4 @@
-use crate::dist::Distribution;
+use crate::{dist::Distribution, stats::DistributionLimits};
 use serde::Deserialize;
 use crate::rng::Random;
 
@@ -25,6 +25,16 @@ impl Distribution for Poisson {
 
     fn get_degrees(&self, intervals: usize) -> usize {
         intervals - 2
+    }
+
+    fn get_intervals(&self, limits: DistributionLimits) -> DistributionLimits {
+        let lower = limits.lower.trunc() as f64;
+        let upper = limits.upper.trunc() as f64 + 1.0;
+        DistributionLimits {
+            lower,
+            upper,
+            intervals: (upper - lower) as usize,
+        }
     }
 }
 

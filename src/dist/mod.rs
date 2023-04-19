@@ -1,3 +1,5 @@
+use crate::stats::DistributionLimits;
+
 pub mod uniform;
 pub mod normal;
 pub mod exponential;
@@ -18,6 +20,15 @@ pub trait Distribution {
     ///
     /// # Argumentos
     /// * `intervals` cantidad de intervalos a usarse para la prueba
-    fn get_degrees(&self, intervals: usize) -> usize;
+    fn get_degrees(&self, intervals: usize) -> usize; // overflow error
+    /// Devuelve el límite máximo y mínimo de la distribución generada
+    /// y la cantidad de intervalos, en caso de que fuera necesario
+    /// sobreescribir los calculados
+    ///
+    /// # Argumentos
+    /// * `intervals` cantidad de intervalos a usarse para la prueba
+    /// * `lower` límite inferior de los intervalos a calcular
+    /// * `upper` límite superior de los intervalos a calcular
+    fn get_intervals(&self, limits: DistributionLimits) -> DistributionLimits;
 }
 

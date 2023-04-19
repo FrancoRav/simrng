@@ -1,4 +1,4 @@
-use crate::rng::Random;
+use crate::{rng::Random, stats::DistributionLimits};
 use serde::Deserialize;
 use crate::dist::Distribution;
 
@@ -38,6 +38,14 @@ impl Distribution for Uniform {
 
     fn get_degrees(&self, intervals: usize) -> usize {
         intervals - 1
+    }
+
+    fn get_intervals(&self, limits: DistributionLimits) -> DistributionLimits {
+        DistributionLimits {
+            lower: self.lower,
+            upper: self.upper,
+            intervals: limits.intervals,
+        }
     }
 }
 
