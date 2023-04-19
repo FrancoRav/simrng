@@ -1,4 +1,4 @@
-use axum::extract::State;
+use axum::extract::{State, Query};
 use axum::{extract, Json};
 use serde::Deserialize;
 use simrng::dist::exponential::Exponential;
@@ -32,6 +32,11 @@ pub struct GenerationParameters {
     pub distribution: DistributionType,
     /// Parámetros para la distribución, de tipo Distribution
     pub data: serde_json::Value,
+}
+
+#[derive(Deserialize)]
+pub struct Pagination {
+    pub page: usize,
 }
 
 /// Últimos datos generados, con los parámetros de su distribución
@@ -149,9 +154,10 @@ pub async fn get_statistics(
 /// * `State(arc)` Un wrapper state al Arc que contiene el RwLock del estado
 /// * `data` número de página a devolver
 pub async fn get_page_numbers(
-    State(arc): State<Arc<RwLock<Generated>>>,
-    data: extract::Json<usize>,
+    Query(page): Query<Pagination>,
+    State(arc): State<Arc<RwLock<Generated>>>
 ) -> Json<Vec<f64>> {
     let arc = arc.read().await;
-    Json(get_page(arc.data.clone(), data.0))
+    Json(get_page(arc.data.clone(), page.page))
 }
+
