@@ -9,7 +9,7 @@ use simrng::dist::poisson::Poisson;
 use simrng::dist::uniform::Uniform;
 use simrng::dist::Distribution;
 use simrng::list::get_page;
-use simrng::rng::{UniformGenerator, LinearCongruentialGenerator};
+use simrng::rng::UniformGenerator;
 use simrng::stats::{full_statistics, StatisticsInput, StatisticsResponse};
 use std::sync::Arc;
 use tokio::sync::RwLock;

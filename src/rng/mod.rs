@@ -1,5 +1,5 @@
 use rand::rngs::SmallRng;
-use rand::{Rng, RngCore};
+use rand::Rng;
 use rand::prelude::Distribution;
 
 /// Interfaz de generador de números aleatorios
