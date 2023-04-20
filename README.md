@@ -1,6 +1,6 @@
 # SimRNG 🦀
 
-Backend para el TP2 de la cátedra de Simulación, 2023
+Backend y librería de generación de números aleatorios para el TP2 de la cátedra de Simulación, 2023
 
 ## Setup
 
