@@ -16,7 +16,7 @@ impl Distribution for Exponential {
         let mut interval_list: Vec<f64> = Vec::with_capacity(intervals);
         let mut interval = lower + (size / 2f64);
         for _ in 0..intervals {
-            let prob = (-lambda * interval).exp() * lambda;
+            let prob = (-lambda * interval).exp() * lambda * size;
             interval_list.push(prob);
             interval += size;
         }
