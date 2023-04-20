@@ -1,4 +1,6 @@
-use rand::Rng;
+use rand::rngs::SmallRng;
+use rand::{Rng, RngCore};
+use rand::prelude::Distribution;
 
 /// Interfaz de generador de números aleatorios
 pub trait Random {
@@ -47,3 +49,15 @@ impl<T: Rng> Random for T {
         self.gen_range(0.0..1.0)
     }
 }
+
+pub struct UniformGenerator {
+    pub dist: rand::distributions::Uniform<f64>,
+    pub rng: SmallRng,
+}
+
+impl Random for UniformGenerator {
+    fn next(&mut self) -> f64 {
+        self.dist.sample(&mut self.rng)
+    }
+}
+
