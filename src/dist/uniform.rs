@@ -37,7 +37,8 @@ impl Distribution for Uniform {
     }
 
     fn get_degrees(&self, intervals: usize) -> usize {
-        intervals - 1
+        if intervals >= 2 { intervals - 1 }
+        else { 1 }
     }
 
     fn get_intervals(&self, limits: DistributionLimits) -> DistributionLimits {

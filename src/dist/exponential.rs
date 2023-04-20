@@ -24,7 +24,8 @@ impl Distribution for Exponential {
     }
 
     fn get_degrees(&self, intervals: usize) -> usize {
-        intervals - 2
+        if intervals >= 3 { intervals - 2 }
+        else { 1 }
     }
 
     fn get_intervals(&self, limits: crate::stats::DistributionLimits) -> crate::stats::DistributionLimits {

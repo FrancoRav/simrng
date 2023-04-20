@@ -43,7 +43,8 @@ impl Distribution for Normal {
     }
 
     fn get_degrees(&self, intervals: usize) -> usize {
-        intervals - 3
+        if intervals >= 4 { intervals - 3 }
+        else { 1 }
     }
 
     fn get_intervals(&self, limits: crate::stats::DistributionLimits) -> crate::stats::DistributionLimits {
