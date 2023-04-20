@@ -10,15 +10,14 @@ pub struct Poisson {
 }
 
 impl Distribution for Poisson {
-    fn get_expected(&self, intervals: usize, lower: f64, upper: f64) -> Vec<f64> {
-        let size = (upper - lower) / intervals as f64;
+    fn get_expected(&self, intervals: usize, lower: f64, _: f64) -> Vec<f64> {
         let lambda = self.lambda;
         let mut interval_list: Vec<f64> = Vec::with_capacity(intervals);
-        let mut interval = lower;
+        let mut interval = lower as u64;
         for _ in 0..intervals {
-            let prob = ((-lambda).exp() * lambda.powf(interval)) / factorial(interval);
+            let prob = ((-lambda).exp() * lambda.powi(interval as i32)) / factorial(interval);
             interval_list.push(prob);
-            interval += size;
+            interval += 1;
         }
         interval_list
     }
@@ -62,7 +61,7 @@ impl Poisson {
 }
 
 // Función privada, requerida por get_expected() de Poisson
-fn factorial(n: f64) -> f64 {
-    let prod: u64 = (0..n as u64).product();
+fn factorial(n: u64) -> f64 {
+    let prod: u64 = (1..n as u64).product();
     prod as f64
 }
