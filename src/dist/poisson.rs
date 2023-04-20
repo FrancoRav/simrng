@@ -62,6 +62,6 @@ impl Poisson {
 
 // Función privada, requerida por get_expected() de Poisson
 fn factorial(n: u64) -> f64 {
-    let prod: u64 = (1..n as u64).product();
+    let prod: u64 = (1..=n as u64).product();
     prod as f64
 }
