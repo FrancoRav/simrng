@@ -14,10 +14,19 @@ impl Distribution for Exponential {
         let size = (upper - lower) / intervals as f64;
         let lambda = self.lambda;
         let mut interval_list: Vec<f64> = Vec::with_capacity(intervals);
-        let mut interval = lower + (size / 2f64);
-        for _ in 0..intervals {
-            let prob = (-lambda * interval).exp() * lambda * size;
+        let mut interval = lower + size;
+        let mut acc_prev = 0f64;
+        for i in 0..intervals {
+            let acc;
+            if i == intervals - 1 {
+                acc = 1.0;
+            }
+            else {
+                acc = 1.0 - (-lambda * interval).exp();
+            }
+            let prob = acc - acc_prev;
             interval_list.push(prob);
+            acc_prev = acc;
             interval += size;
         }
         interval_list
